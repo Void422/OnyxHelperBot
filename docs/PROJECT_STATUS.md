@@ -4,43 +4,43 @@ Last updated: 2026-08-15
 
 ## Completed in this release
 
-- Sites-compatible Vinext dashboard/API and a separately deployable Discord.js bot.
-- A 23-table, indexed D1 schema and generated migration covering identity, guild configuration, moderation, appeals, giveaways, levels, tickets, reminders, suggestions, audit events, and durable rate limits.
+- Sites-compatible Vinext dashboard/API and a separately deployable Discord.js gateway process.
+- A 24-table indexed D1 schema covering identity, guild configuration, moderation, appeals, giveaways, levels, tickets, reminders, suggestions, starboard state, audit events, and durable rate limits/jobs.
 - Discord OAuth2 login, opaque HttpOnly sessions, encrypted OAuth tokens, live Manage Server/Administrator checks, CSRF and same-origin mutation protection, and authenticated bot-to-API routes.
-- Guild registration, live Discord channel/role resources, settings, overview, moderation cases, appeals, giveaways, audit history, health, XP, warnings, and persistent scheduler APIs.
-- Permission- and hierarchy-safe commands for bans, unbans, kicks, timeouts, warnings, warning history, purges, locks, slowmode, giveaways, rank, help, ping, uptime, avatar, user info, and server info.
-- Persistent temporary-action reversal, configurable warning escalation, giveaway entry/draw recovery, XP anti-spam and level roles, and foundational automod actions/exemptions.
-- Responsive landing, server selector, guild overview, configuration, moderation, appeals, giveaways, audit, and public appeal interfaces backed by real APIs.
-- Structured bot logging, graceful shutdown, Docker packaging, CI, architecture/security/deployment documentation, a command catalog, and a custom social card.
-- Quality gate: lint and both TypeScript targets pass; 13 domain/security tests and 2 rendered-page tests pass; dashboard and bot production builds pass; the production dependency audit reports zero known vulnerabilities.
+- 51 top-level slash commands with 77 independently configurable actions. The dashboard catalog and bot registry were compared directly: zero missing handlers and zero duplicates.
+- Complete moderation records for cases, warnings, reason corrections, member history, private staff notes, temporary actions, nickname actions, and warning escalation.
+- Durable giveaway creation, listing, inspection, editing, pause/resume, manual ending, scheduled ending, rerolls, weighted entries, and customizable winner messages.
+- Durable ticket records, private channel creation, panels, claims, close/reopen, participants, rename, transcript export, staff access, and routed ticket logs.
+- Persistent reminders, suggestion voting/status workflow, discussion threads, welcome/goodbye delivery, delayed human/bot autoroles, and reaction-based starboard promotion.
+- XP anti-spam policy, ranks, leaderboard, audited XP adjustment, channel/role exclusions, level role rewards, and customizable level announcements.
+- Nine configurable automod rule types with thresholds, exemptions, delete/warn/timeout/kick/ban/notify actions, and Discord alerts.
+- Dedicated dashboard workspaces for Commands, Automod, Tickets, Levels, Message Studio, Community, Discord Logs, Moderation, Appeals, Giveaways, Audit, and server-wide settings.
+- Safe message placeholders with plain content, embed title/body/footer, colors, HTTPS media, and live Discord-style previews for welcome, goodbye, warning, ticket, level, and giveaway messages.
+- Category-based Discord logs for moderation, automod, messages, members, server structure, voice, tickets, and giveaways, plus a separate durable application audit trail.
+- Responsive onyx-and-amber visual system, custom social preview, structured logging, graceful shutdown, CI, deployment scripts, and security/architecture documentation.
+- Quality gate: lint and both TypeScript targets pass; 17 domain/security tests and 2 rendered-page tests pass; dashboard and bot production builds pass.
 
 ## Intentionally not represented as complete
 
-The supplied product brief is a multi-release roadmap. These requested areas have schema or extension points but are not complete product features in this release:
+The original brief includes a longer multi-release roadmap. These areas are not exposed as working modules in this release:
 
-- ticket commands, transcript generation/storage, ticket dashboard, and R2 retention controls
-- polls, suggestion voting/workflow, starboard, reminders, custom commands, embed builder, and welcome/autorole execution
-- full raid-mode heuristics, link/domain reputation, anti-nuke, detailed log routing, and every moderation command in the long-tail command list
-- optional modules such as server economy, self-role menus, temporary voice, birthdays, verification, voice tracking, and game/account integrations
-- localization packs, installable command/module toggles for every planned feature, and full usage analytics
-- horizontal multi-instance job coordination beyond the implemented leases, production monitoring integration, and load testing
+- self-role menus, custom commands, polls, economy, birthdays, temporary voice channels, verification, game/account integrations, and voice-time rewards
+- advanced anti-nuke orchestration, external domain reputation, raid-mode heuristics beyond configured account/link rules, and cross-guild threat intelligence
+- object-storage transcript archives and dashboard transcript retention; current transcript export is generated on demand from the latest 100 Discord messages
+- localization packs, full product analytics, horizontal multi-instance scheduler coordination beyond leases, and formal load testing
 
-No dashboard control or metric is shown for an unimplemented subsystem.
-
-## External requirement before end-to-end OAuth verification
-
-- the exact production callback URL registered in the Discord Developer Portal
+The unimplemented role-menu module is deliberately absent from the editable dashboard module list.
 
 ## Known limitations
 
-- The current storage adapter targets Cloudflare D1 so the dashboard and API can ship as one worker. Shared domain logic is storage-independent, but a PostgreSQL adapter is not included.
-- The bot connection, global command registration, API authentication, and scheduler startup are verified against one live guild. The OAuth client secret is installed and the authorization redirect is verified; the callback and staff-facing actions remain unverified until an interactive Discord login is completed with the production redirect registered.
-- Uploaded images and transcript blobs are disabled until object storage and retention policy are configured.
-- The full development-only audit reports notices in Vinext's image inspection dependency and Drizzle Kit's legacy loader. These packages do not ship in the dashboard worker or bot runtime; `npm audit --omit=dev` is clean. Upstream currently offers no compatible patched release for those two tool-only paths.
+- The storage adapter targets Cloudflare D1. Shared domain logic is storage-independent, but a PostgreSQL adapter is not included.
+- Discord global command changes can take time to propagate. Development-guild registration remains available for immediate testing.
+- Presence is global to one Discord bot user. On a multi-guild installation, the process uses the first connected guild's configured rotation.
+- Uploaded files and transcript blobs require object storage and a retention policy; neither is silently retained by the worker.
+- Full Discord-side behavioral verification requires exercising privileged actions in a test channel with appropriate role hierarchy. Automated checks validate registration, schemas, builds, and domain behavior without mutating a live community.
 
 ## Deployment status
 
-- Dashboard/API: public production deployment is healthy at `https://onyx-helper.quatnumgaming.chatgpt.site`; all runtime secrets are installed through hosted secret management and the OAuth login route correctly targets Discord.
-- Bot: running on the supplied Linux host under one PM2 process with an isolated Node.js 22 runtime, owner-only environment file, globally registered commands, one connected guild, and a healthy scheduler/API link.
-- Database: schema and migration verified locally and against the hosted D1 binding; all 23 application tables are present.
-- GitHub: the public source repository is live at `https://github.com/Void422/OnyxHelperBot`; its Pages mirror is deployed at `https://void422.github.io/OnyxHelperBot/` and both GitHub quality workflows pass.
+- Dashboard/API: hosted through Sites at `https://onyx-helper.quatnumgaming.chatgpt.site` with secrets managed outside source control and D1 bound as `DB`.
+- Bot: deployed separately to the supplied Linux host under PM2 using an owner-only environment file.
+- GitHub: public source at `https://github.com/Void422/OnyxHelperBot`; GitHub Pages mirror at `https://void422.github.io/OnyxHelperBot/`.

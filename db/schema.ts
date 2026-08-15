@@ -73,6 +73,8 @@ export const guilds = sqliteTable("guilds", {
   memberCount: integer("member_count").notNull().default(0),
   botInstalled: integer("bot_installed", { mode: "boolean" }).notNull().default(true),
   nextCaseNumber: integer("next_case_number").notNull().default(1),
+  nextTicketNumber: integer("next_ticket_number").notNull().default(1),
+  nextSuggestionNumber: integer("next_suggestion_number").notNull().default(1),
   joinedAt: integer("joined_at", { mode: "timestamp_ms" }).notNull(),
   ...timestamps,
 });
@@ -194,7 +196,7 @@ export const temporaryActions = sqliteTable(
     id: text("id").primaryKey(),
     guildId: text("guild_id").notNull().references(() => guilds.id, { onDelete: "cascade" }),
     userId: text("user_id").notNull(),
-    action: text("action", { enum: ["unban", "untimeout", "remove_role", "unlock_channel"] }).notNull(),
+    action: text("action", { enum: ["unban", "untimeout", "remove_role", "unlock_channel", "add_roles"] }).notNull(),
     payload: text("payload", { mode: "json" }).$type<Record<string, string>>().notNull().default(sql`'{}'`),
     dueAt: integer("due_at", { mode: "timestamp_ms" }).notNull(),
     status: text("status", { enum: ["pending", "processing", "completed", "failed", "cancelled"] }).notNull().default("pending"),
@@ -365,6 +367,19 @@ export const suggestions = sqliteTable(
     ...timestamps,
   },
   (table) => [uniqueIndex("suggestions_guild_number_unique").on(table.guildId, table.suggestionNumber), index("suggestions_guild_status_idx").on(table.guildId, table.status)],
+);
+
+export const starboardEntries = sqliteTable(
+  "starboard_entries",
+  {
+    sourceMessageId: text("source_message_id").primaryKey(),
+    guildId: text("guild_id").notNull().references(() => guilds.id, { onDelete: "cascade" }),
+    sourceChannelId: text("source_channel_id").notNull(),
+    starboardMessageId: text("starboard_message_id"),
+    starCount: integer("star_count").notNull().default(0),
+    ...timestamps,
+  },
+  (table) => [index("starboard_entries_guild_idx").on(table.guildId, table.createdAt)],
 );
 
 export const auditLogs = sqliteTable(

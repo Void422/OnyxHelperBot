@@ -1,6 +1,8 @@
 import { EmbedBuilder, type Client } from "discord.js";
 import type { OnyxApiClient, TemporaryJob } from "../api-client";
+import { sendGuildLog } from "../events/logging";
 import { logger } from "../logger";
+import { configuredMessage } from "../messages";
 
 function payload(job: TemporaryJob) {
   if (typeof job.payload !== "string") return job.payload;
@@ -29,6 +31,10 @@ async function executeTemporaryJob(client: Client<true>, job: TemporaryJob) {
     const channel = await guild.channels.fetch(data.channelId);
     if (channel && "permissionOverwrites" in channel) await channel.permissionOverwrites.edit(guild.roles.everyone, { SendMessages: null }, { reason: "Temporary lock expired" });
   }
+  if (job.action === "add_roles" && data.roleIds) {
+    const member = await guild.members.fetch(job.user_id).catch(() => null);
+    if (member) await member.roles.add(data.roleIds.split(",").filter(Boolean), "Delayed Onyx autorole configuration");
+  }
 }
 
 async function announceGiveaways(client: Client<true>, api: OnyxApiClient) {
@@ -46,15 +52,40 @@ async function announceGiveaways(client: Client<true>, api: OnyxApiClient) {
         }
       }
       const winners = giveaway.winnerUserIds.map((id) => `<@${id}>`);
-      await channel.send({
-        content: winners.length
-          ? `Giveaway ended — ${winners.join(", ")} ${winners.length === 1 ? "wins" : "win"} **${giveaway.prize}**.`
-          : `Giveaway ended — there were no eligible entries for **${giveaway.prize}**.`,
-        allowedMentions: { users: giveaway.winnerUserIds },
-      });
+      const config = await api.getGuildConfig(giveaway.guildId, true);
+      const template = config.settings?.settings.messages?.giveawayWinner;
+      const message = template && winners.length
+        ? configuredMessage(template, { user: giveaway.winnerUserIds[0], mention: winners.join(", "), username: winners.join(", "), server: guild.name, prize: giveaway.prize })
+        : { content: winners.length ? `Giveaway ended — ${winners.join(", ")} ${winners.length === 1 ? "wins" : "win"} **${giveaway.prize}**.` : `Giveaway ended — there were no eligible entries for **${giveaway.prize}**.` };
+      await channel.send({ ...message, allowedMentions: { users: giveaway.winnerUserIds, parse: [] } });
+      await sendGuildLog(guild, api, "giveaways", { embeds: [new EmbedBuilder().setColor(0xe0aa4f).setTitle("Giveaway ended automatically").setDescription(`**${giveaway.prize}** ended with ${giveaway.eligibleEntryCount} eligible entr${giveaway.eligibleEntryCount === 1 ? "y" : "ies"}.`).setTimestamp()] });
     } catch (error) {
       logger.error({ event: "giveaway.announcement_failed", giveawayId: giveaway.id, error });
     }
+  }
+}
+
+async function deliverReminders(client: Client<true>, api: OnyxApiClient) {
+  const due = await api.claimDueReminders();
+  for (const reminder of due.reminders) {
+    let success = false;
+    try {
+      if (reminder.guildId && reminder.channelId) {
+        const guild = client.guilds.cache.get(reminder.guildId) ?? await client.guilds.fetch(reminder.guildId);
+        const channel = await guild.channels.fetch(reminder.channelId).catch(() => null);
+        if (channel?.isTextBased() && !channel.isDMBased() && "send" in channel) {
+          await channel.send({ content: `<@${reminder.userId}> — reminder: ${reminder.message}`, allowedMentions: { users: [reminder.userId] } });
+          success = true;
+        }
+      } else {
+        const user = await client.users.fetch(reminder.userId);
+        await user.send(`Reminder: ${reminder.message}`);
+        success = true;
+      }
+    } catch (error) {
+      logger.warn({ event: "reminder.delivery_failed", reminderId: reminder.id, error });
+    }
+    await api.completeReminder(reminder.id, success);
   }
 }
 
@@ -76,6 +107,7 @@ export function startScheduler(client: Client<true>, api: OnyxApiClient) {
         }
       }
       await announceGiveaways(client, api);
+      await deliverReminders(client, api);
     } catch (error) {
       logger.warn({ event: "scheduler.tick_failed", error });
     } finally {

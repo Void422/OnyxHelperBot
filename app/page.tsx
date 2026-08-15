@@ -5,7 +5,7 @@ import { OnyxMark } from "@/components/onyx-mark";
 const modules = [
   { icon: Gavel, title: "Moderation with memory", copy: "Cases, warnings, evidence, and temporary actions stay organized and survive every restart." },
   { icon: ShieldCheck, title: "Safety you can tune", copy: "Automod rules use measured thresholds, role and channel exemptions, and accountable actions." },
-  { icon: Gift, title: "Fair giveaways", copy: "Eligibility is checked on the server. Entries are durable, weighted transparently, and selected once." },
+  { icon: Gift, title: "Fair giveaways", copy: "Eligibility is checked on the server. Entries are durable, weighted transparently, and rerolls stay accountable." },
   { icon: Gauge, title: "Participation, not spam", copy: "XP cooldowns, duplicate detection, and low-signal filtering reward real conversation." },
   { icon: TicketCheck, title: "Support that stays tidy", copy: "Ticket ownership, staff access, claims, closure, and transcripts follow one clear workflow." },
   { icon: Layers3, title: "One control plane", copy: "Guild settings, appeals, logs, modules, and audit history live in a dashboard that controls the bot." },
@@ -31,7 +31,8 @@ export default function Home() {
           <div>
             <div className="eyebrow">Discord management, considered</div>
             <h1>Your server, under control.</h1>
-            <p className="hero-copy">Onyx brings moderation, appeals, giveaways, levels, tickets, and safety tools into one calm dashboard—without turning your community into a control panel.</p>
+            <p className="hero-copy">Onyx gives serious Discord teams real control over commands, moderation, tickets, automod, levels, messages, logs, and community programs—without the usual wall of toggles.</p>
+            <div className="hero-proof"><span><strong>77</strong> command actions</span><span><strong>9</strong> automod rules</span><span><strong>11</strong> working modules</span></div>
             <div className="hero-actions">
               <a className="button primary" href="/api/auth/discord/login">Continue with Discord <ArrowRight size={16} /></a>
               <a className="button" href="/appeal">Submit an appeal</a>
@@ -44,17 +45,17 @@ export default function Home() {
             <div className="window-body">
               <aside className="window-sidebar">
                 <div className="window-server">Onyx Community</div>
-                {['Overview', 'Moderation', 'Automod', 'Appeals', 'Giveaways', 'Levels', 'Audit log'].map((item, index) => <div key={item} className={`window-nav-row${index === 0 ? ' active' : ''}`}>{item}</div>)}
+                {['Overview', 'Commands', 'Moderation', 'Automod', 'Tickets', 'Message studio', 'Discord logs'].map((item, index) => <div key={item} className={`window-nav-row${index === 1 ? ' active' : ''}`}>{item}</div>)}
               </aside>
               <div className="window-main">
-                <div className="window-heading">Everything important, in one place.</div>
-                <div className="window-sub">Live configuration · permission-aware · guild scoped</div>
+                <div className="window-heading">Every command, on your terms.</div>
+                <div className="window-sub">Per-action controls · real handlers · guild scoped</div>
                 <div className="module-list">
                   {[
-                    [Gavel, 'Moderation', 'Cases, warnings, temporary actions'],
-                    [ShieldCheck, 'Automod', 'Measured rules and exemptions'],
-                    [Gift, 'Giveaways', 'Eligibility checked server-side'],
-                    [Gauge, 'Levels', 'Participation with anti-spam'],
+                    [Gavel, '/ban', 'Moderation · Ban Members · 3s cooldown'],
+                    [ShieldCheck, '/suggest', 'Community · Everyone · 30s cooldown'],
+                    [TicketCheck, '/ticket close', 'Tickets · Manage Channels · 2s cooldown'],
+                    [Gauge, '/leaderboard', 'Levels · Everyone · 10s cooldown'],
                   ].map(([Icon, name, copy]) => (
                     <div className="module-row" key={String(name)}>
                       <span className="module-icon"><Icon size={15} /></span>

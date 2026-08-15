@@ -13,12 +13,63 @@ export const guildModules = [
   "starboard",
 ] as const;
 
+export const availableGuildModules = guildModules.filter((module) => module !== "role_menus");
+
 export type GuildModule = (typeof guildModules)[number];
 
 export interface WarningThreshold {
   count: number;
   action: "timeout" | "kick" | "ban";
   durationMs?: number;
+}
+
+export interface MessageTemplate {
+  content?: string;
+  title?: string;
+  description?: string;
+  color?: string;
+  footer?: string;
+  imageUrl?: string;
+  thumbnailUrl?: string;
+}
+
+export interface TicketSettings {
+  categoryId?: string;
+  logChannelId?: string;
+  staffRoleIds?: string[];
+  panelTitle?: string;
+  panelDescription?: string;
+  buttonLabel?: string;
+  channelNamePattern?: string;
+  maxOpenPerUser?: number;
+  allowUserClose?: boolean;
+}
+
+export interface WelcomeSettings {
+  channelId?: string;
+  goodbyeChannelId?: string;
+  directMessage?: boolean;
+}
+
+export interface AutoroleSettings {
+  memberRoleIds?: string[];
+  botRoleIds?: string[];
+  delaySeconds?: number;
+  minimumAccountAgeDays?: number;
+}
+
+export interface SuggestionSettings {
+  channelId?: string;
+  anonymous?: boolean;
+  createThreads?: boolean;
+}
+
+export interface StarboardSettings {
+  channelId?: string;
+  emoji?: string;
+  threshold?: number;
+  allowSelfStars?: boolean;
+  ignoredChannelIds?: string[];
 }
 
 export interface GuildSettingsData {
@@ -30,6 +81,20 @@ export interface GuildSettingsData {
   levelAnnouncementChannelId?: string;
   welcomeChannelId?: string;
   welcomeMessage?: string;
+  welcome?: WelcomeSettings;
+  autoroles?: AutoroleSettings;
+  tickets?: TicketSettings;
+  suggestions?: SuggestionSettings;
+  starboard?: StarboardSettings;
+  messages?: {
+    welcome?: MessageTemplate;
+    goodbye?: MessageTemplate;
+    levelUp?: MessageTemplate;
+    warningDm?: MessageTemplate;
+    ticketOpen?: MessageTemplate;
+    giveawayWinner?: MessageTemplate;
+  };
+  commandOverrides?: Record<string, { enabled?: boolean; cooldownSeconds?: number }>;
   warningThresholds?: WarningThreshold[];
   xp?: {
     cooldownSeconds?: number;

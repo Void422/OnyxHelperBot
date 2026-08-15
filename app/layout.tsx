@@ -26,8 +26,8 @@ export async function generateMetadata(): Promise<Metadata> {
     title: { default: title, template: "%s · Onyx" },
     description,
     icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
-    openGraph: { type: "website", url: origin, siteName: "Onyx", title, description, images: [{ url: `${origin}/og.png`, width: 1733, height: 907, alt: "Onyx — Your server, under control." }] },
-    twitter: { card: "summary_large_image", title, description, images: [`${origin}/og.png`] },
+    openGraph: { type: "website", url: origin, siteName: "Onyx", title, description, images: [{ url: `${origin}/og-v2.png`, width: 1733, height: 907, alt: "Onyx — Discord operations, under control." }] },
+    twitter: { card: "summary_large_image", title, description, images: [`${origin}/og-v2.png`] },
   };
 }
 
