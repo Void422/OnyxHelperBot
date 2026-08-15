@@ -90,8 +90,8 @@ const say: OnyxCommand = {
     .setName("say")
     .setDescription("Post a plain message through Onyx without mentions.")
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages)
-    .addChannelOption((option) => option.setName("channel").setDescription("Where to post; defaults to this channel").addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement))
-    .addStringOption((option) => option.setName("message").setDescription("The message to post").setRequired(true).setMaxLength(2_000)),
+    .addStringOption((option) => option.setName("message").setDescription("The message to post").setRequired(true).setMaxLength(2_000))
+    .addChannelOption((option) => option.setName("channel").setDescription("Where to post; defaults to this channel").addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)),
   category: "Administration",
   userPermissions: [PermissionFlagsBits.ManageMessages],
   botPermissions: [PermissionFlagsBits.SendMessages],
