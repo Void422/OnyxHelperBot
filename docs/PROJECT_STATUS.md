@@ -47,6 +47,6 @@ No dashboard control or metric is shown for an unimplemented subsystem.
 
 ## Deployment status
 
-- Dashboard/API: production build verified; hosted publication and secrets are the remaining deployment steps.
+- Dashboard/API: private production deployment succeeded at `https://onyx-helper.quatnumgaming.chatgpt.site`; Discord secrets and the production migration remain before live guild operation.
 - Bot: production bundle and container definition verified; not connected to Discord or deployed to a persistent host.
 - Database: schema, generated migration, and local migration verified; production D1 provisioning and migration remain.
