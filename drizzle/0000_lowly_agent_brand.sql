@@ -121,6 +121,8 @@ CREATE TABLE `guilds` (
 	`member_count` integer DEFAULT 0 NOT NULL,
 	`bot_installed` integer DEFAULT true NOT NULL,
 	`next_case_number` integer DEFAULT 1 NOT NULL,
+	`next_ticket_number` integer DEFAULT 1 NOT NULL,
+	`next_suggestion_number` integer DEFAULT 1 NOT NULL,
 	`joined_at` integer NOT NULL,
 	`created_at` integer DEFAULT (unixepoch() * 1000) NOT NULL,
 	`updated_at` integer DEFAULT (unixepoch() * 1000) NOT NULL
@@ -341,3 +343,16 @@ CREATE TABLE `warnings` (
 );
 --> statement-breakpoint
 CREATE INDEX `warnings_guild_user_active_idx` ON `warnings` (`guild_id`,`user_id`,`active`);
+--> statement-breakpoint
+CREATE TABLE `starboard_entries` (
+	`source_message_id` text PRIMARY KEY NOT NULL,
+	`guild_id` text NOT NULL,
+	`source_channel_id` text NOT NULL,
+	`starboard_message_id` text,
+	`star_count` integer DEFAULT 0 NOT NULL,
+	`created_at` integer DEFAULT (unixepoch() * 1000) NOT NULL,
+	`updated_at` integer DEFAULT (unixepoch() * 1000) NOT NULL,
+	FOREIGN KEY (`guild_id`) REFERENCES `guilds`(`id`) ON UPDATE no action ON DELETE cascade
+);
+--> statement-breakpoint
+CREATE INDEX `starboard_entries_guild_idx` ON `starboard_entries` (`guild_id`,`created_at`);
