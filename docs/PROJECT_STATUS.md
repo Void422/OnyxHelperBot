@@ -27,21 +27,20 @@ The supplied product brief is a multi-release roadmap. These requested areas hav
 
 No dashboard control or metric is shown for an unimplemented subsystem.
 
-## External requirements before dashboard OAuth is live
+## External requirement before end-to-end OAuth verification
 
-- `DISCORD_CLIENT_SECRET`
 - the exact production callback URL registered in the Discord Developer Portal
 
 ## Known limitations
 
 - The current storage adapter targets Cloudflare D1 so the dashboard and API can ship as one worker. Shared domain logic is storage-independent, but a PostgreSQL adapter is not included.
-- The bot connection, global command registration, API authentication, and scheduler startup are verified against one live guild. Dashboard OAuth and staff-facing actions remain unverified until the OAuth client secret and redirect are configured.
+- The bot connection, global command registration, API authentication, and scheduler startup are verified against one live guild. The OAuth client secret is installed and the authorization redirect is verified; the callback and staff-facing actions remain unverified until an interactive Discord login is completed with the production redirect registered.
 - Uploaded images and transcript blobs are disabled until object storage and retention policy are configured.
 - The full development-only audit reports notices in Vinext's image inspection dependency and Drizzle Kit's legacy loader. These packages do not ship in the dashboard worker or bot runtime; `npm audit --omit=dev` is clean. Upstream currently offers no compatible patched release for those two tool-only paths.
 
 ## Deployment status
 
-- Dashboard/API: public production deployment is healthy at `https://onyx-helper.quatnumgaming.chatgpt.site`; all runtime secrets except `DISCORD_CLIENT_SECRET` are installed through hosted secret management.
+- Dashboard/API: public production deployment is healthy at `https://onyx-helper.quatnumgaming.chatgpt.site`; all runtime secrets are installed through hosted secret management and the OAuth login route correctly targets Discord.
 - Bot: running on the supplied Linux host under one PM2 process with an isolated Node.js 22 runtime, owner-only environment file, globally registered commands, one connected guild, and a healthy scheduler/API link.
 - Database: schema and migration verified locally and against the hosted D1 binding; all 23 application tables are present.
-- GitHub: local history is committed and deployment-ready, but GitHub publication is blocked on this computer until GitHub CLI is installed and authenticated.
+- GitHub: the public source repository is live at `https://github.com/Void422/OnyxHelperBot`; its Pages mirror is deployed at `https://void422.github.io/OnyxHelperBot/` and both GitHub quality workflows pass.
