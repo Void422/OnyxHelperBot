@@ -35,7 +35,6 @@ No dashboard control or metric is shown for an unimplemented subsystem.
 - production `APP_URL` and an exactly matching Discord OAuth redirect
 - `SESSION_SECRET` with at least 32 random characters
 - `ONYX_SERVICE_TOKEN` shared only by the API and bot
-- a provisioned production D1 binding and applied migration
 - a persistent Node.js 22+ bot host
 
 ## Known limitations
@@ -47,6 +46,6 @@ No dashboard control or metric is shown for an unimplemented subsystem.
 
 ## Deployment status
 
-- Dashboard/API: private production deployment succeeded at `https://onyx-helper.quatnumgaming.chatgpt.site`; Discord secrets and the production migration remain before live guild operation.
+- Dashboard/API: private production deployment succeeded at `https://onyx-helper.quatnumgaming.chatgpt.site`; Discord secrets remain before live guild operation.
 - Bot: production bundle and container definition verified; not connected to Discord or deployed to a persistent host.
-- Database: schema, generated migration, and local migration verified; production D1 provisioning and migration remain.
+- Database: schema and migration verified locally and against the hosted D1 binding; all 23 application tables are present.
