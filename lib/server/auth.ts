@@ -2,6 +2,7 @@ import { and, eq, gt } from "drizzle-orm";
 import { getDb } from "@/db";
 import { oauthSessions, sessionGuilds, users } from "@/db/schema";
 import { canManageGuild, DiscordPermission, hasDiscordPermission } from "@/packages/core/src/permissions";
+import { chunksOf } from "./batch";
 import { constantTimeEqual, decryptSecret, encryptSecret, randomToken } from "./crypto";
 import { fetchDiscordGuilds, refreshDiscordToken, type DiscordGuild, type DiscordTokenResponse } from "./discord";
 import { ApiError, assertSameOrigin } from "./http";
@@ -10,6 +11,7 @@ import { publicAppUrl, requireRuntimeValue, runtimeValue } from "./runtime";
 const SESSION_COOKIE = "onyx_session";
 const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1_000;
 const GUILD_CACHE_MS = 2 * 60 * 1_000;
+const SESSION_GUILD_INSERT_BATCH_SIZE = 10;
 
 export interface AuthSession {
   id: string;
@@ -112,9 +114,9 @@ export async function createSession(input: {
     expiresAt: new Date(now.getTime() + SESSION_DURATION_MS),
     lastSeenAt: now,
   });
-  if (input.guilds.length) {
+  for (const guildBatch of chunksOf(input.guilds, SESSION_GUILD_INSERT_BATCH_SIZE)) {
     await database.insert(sessionGuilds).values(
-      input.guilds.map((guild) => ({
+      guildBatch.map((guild) => ({
         sessionId,
         guildId: guild.id,
         name: guild.name,
@@ -142,9 +144,9 @@ async function cachedGuilds(session: AuthSession) {
   const guilds = await fetchDiscordGuilds(await accessToken(session));
   const now = new Date();
   await database.delete(sessionGuilds).where(eq(sessionGuilds.sessionId, session.id));
-  if (guilds.length) {
+  for (const guildBatch of chunksOf(guilds, SESSION_GUILD_INSERT_BATCH_SIZE)) {
     await database.insert(sessionGuilds).values(
-      guilds.map((guild) => ({
+      guildBatch.map((guild) => ({
         sessionId: session.id,
         guildId: guild.id,
         name: guild.name,
