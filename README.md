@@ -8,14 +8,18 @@ The current product includes:
 
 - Discord OAuth2 sign-in and live Manage Server authorization
 - server selector with least-privilege bot installation links
-- moderation cases, bans, kicks, warnings, timeouts, purges, locks, and slowmode
+- 51 top-level slash commands with 77 configurable command actions across moderation, administration, community, and utilities
+- moderation cases, bans, kicks, softbans, warnings, timeouts, history, staff notes, purges, locks, roles, nicknames, and slowmode
 - persistent temporary-action recovery after bot restarts
 - configurable warning escalation
-- durable giveaways with server-side eligibility and weighted winner selection
-- XP anti-spam, rank progress, and level-role rewards
-- configurable automod foundations with exemptions and accountable actions
+- durable giveaways with editing, pause/resume, rerolls, server-side eligibility, and weighted winner selection
+- private tickets with panels, claims, participants, close/reopen, routed logs, and transcript export
+- persistent reminders, suggestions with staff decisions, welcome/goodbye messages, delayed autoroles, and starboard promotion
+- XP anti-spam, rank and leaderboard views, staff adjustments, exclusions, announcements, and level-role rewards
+- nine configurable automod rules with exemptions and accountable delete/warn/timeout/kick/ban/notify actions
 - public appeal submission plus staff review, decisions, and authorized unban
-- real dashboard settings, overview, cases, appeals, giveaways, and audit history
+- dedicated dashboard workspaces for commands, automod, tickets, levels, message templates, community, Discord log routing, cases, appeals, giveaways, and audit history
+- per-command enable/cooldown overrides and safe Discord message/embed customization with live previews
 - structured logging, graceful shutdown, health checks, migrations, tests, and CI
 
 The long-form roadmap remains intentionally broader than the implemented release. [Project status](docs/PROJECT_STATUS.md) records the exact boundary.
@@ -70,7 +74,7 @@ Guild-scoped development commands update immediately. Remove `DEVELOPMENT_GUILD_
 2. Add this OAuth2 redirect exactly: `${APP_URL}/api/auth/discord/callback`.
 3. The dashboard login requests `identify` and `guilds` only.
 4. The generated install link requests `bot` and `applications.commands`, plus the implemented module permissions. It deliberately does not request Administrator.
-5. Enable Server Members Intent and Message Content Intent. Members are needed for hierarchy, age, roles, and leveling; message content is needed for automod and anti-spam XP.
+5. Enable Server Members Intent and Message Content Intent. Members are needed for hierarchy, age, roles, and leveling; message content is needed for automod and anti-spam XP. Voice State and reaction events use standard non-privileged gateway intents.
 6. Place the Onyx bot role above every role it must moderate or assign.
 
 Bot tokens and OAuth tokens are passwords. Rotate them immediately if exposed.

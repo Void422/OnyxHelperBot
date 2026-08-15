@@ -2,6 +2,18 @@ import { z } from "zod";
 import { guildModules } from "./domain";
 
 const snowflake = z.string().regex(/^\d{17,20}$/, "Choose a valid Discord resource.");
+const optionalHttpsUrl = z.string().url().refine((value) => new URL(value).protocol === "https:", "Use a secure HTTPS URL.").optional();
+const messageTemplateSchema = z
+  .object({
+    content: z.string().max(2_000).optional(),
+    title: z.string().max(256).optional(),
+    description: z.string().max(4_096).optional(),
+    color: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Use a six-digit hex color.").optional(),
+    footer: z.string().max(2_048).optional(),
+    imageUrl: optionalHttpsUrl,
+    thumbnailUrl: optionalHttpsUrl,
+  })
+  .refine((value) => Boolean(value.content || value.title || value.description), "Add message content or an embed title/description.");
 
 export const settingsUpdateSchema = z.object({
   enabledModules: z.array(z.enum(guildModules)).max(guildModules.length),
@@ -16,6 +28,67 @@ export const settingsUpdateSchema = z.object({
     levelAnnouncementChannelId: snowflake.optional(),
     welcomeChannelId: snowflake.optional(),
     welcomeMessage: z.string().max(2_000).optional(),
+    welcome: z
+      .object({
+        channelId: snowflake.optional(),
+        goodbyeChannelId: snowflake.optional(),
+        directMessage: z.boolean().optional(),
+      })
+      .optional(),
+    autoroles: z
+      .object({
+        memberRoleIds: z.array(snowflake).max(20).optional(),
+        botRoleIds: z.array(snowflake).max(20).optional(),
+        delaySeconds: z.number().int().min(0).max(86_400).optional(),
+        minimumAccountAgeDays: z.number().int().min(0).max(3_650).optional(),
+      })
+      .optional(),
+    tickets: z
+      .object({
+        categoryId: snowflake.optional(),
+        logChannelId: snowflake.optional(),
+        staffRoleIds: z.array(snowflake).max(20).optional(),
+        panelTitle: z.string().min(1).max(256).optional(),
+        panelDescription: z.string().max(4_096).optional(),
+        buttonLabel: z.string().min(1).max(80).optional(),
+        channelNamePattern: z.string().min(1).max(80).regex(/^[a-z0-9-{_}]+$/, "Use lowercase letters, numbers, dashes, and placeholders.").optional(),
+        maxOpenPerUser: z.number().int().min(1).max(10).optional(),
+        allowUserClose: z.boolean().optional(),
+      })
+      .optional(),
+    suggestions: z
+      .object({
+        channelId: snowflake.optional(),
+        anonymous: z.boolean().optional(),
+        createThreads: z.boolean().optional(),
+      })
+      .optional(),
+    starboard: z
+      .object({
+        channelId: snowflake.optional(),
+        emoji: z.string().min(1).max(32).optional(),
+        threshold: z.number().int().min(2).max(100).optional(),
+        allowSelfStars: z.boolean().optional(),
+        ignoredChannelIds: z.array(snowflake).max(100).optional(),
+      })
+      .optional(),
+    messages: z
+      .object({
+        welcome: messageTemplateSchema.optional(),
+        goodbye: messageTemplateSchema.optional(),
+        levelUp: messageTemplateSchema.optional(),
+        warningDm: messageTemplateSchema.optional(),
+        ticketOpen: messageTemplateSchema.optional(),
+        giveawayWinner: messageTemplateSchema.optional(),
+      })
+      .optional(),
+    commandOverrides: z
+      .record(
+        z.string().regex(/^[a-z0-9_-]+(?:\.[a-z0-9_-]+)?$/).max(64),
+        z.object({ enabled: z.boolean().optional(), cooldownSeconds: z.number().int().min(0).max(3_600).optional() }),
+      )
+      .refine((value) => Object.keys(value).length <= 100, "No more than 100 command overrides can be stored.")
+      .optional(),
     warningThresholds: z
       .array(
         z.object({

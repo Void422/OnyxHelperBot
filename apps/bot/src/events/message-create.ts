@@ -3,6 +3,7 @@ import { levelFromXp } from "@/packages/core/src/leveling";
 import { XpPolicy, type XpPolicyConfig } from "@/packages/core/src/xp-policy";
 import type { BotGuildConfig, OnyxApiClient } from "../api-client";
 import { logger } from "../logger";
+import { configuredMessage } from "../messages";
 
 const xpPolicy = new XpPolicy();
 const messageWindows = new Map<string, number[]>();
@@ -46,6 +47,10 @@ async function applyAutomod(message: Message<true>, config: BotGuildConfig, api:
       matched = true;
       explanation = "Discord invite link";
     }
+    if (rule.kind === "links" && /https?:\/\/\S+/i.test(message.content)) {
+      matched = true;
+      explanation = "external link";
+    }
     if (rule.kind === "mentions" && message.mentions.users.size + message.mentions.roles.size >= threshold) {
       matched = true;
       explanation = `${message.mentions.users.size + message.mentions.roles.size} mentions in one message`;
@@ -66,6 +71,22 @@ async function applyAutomod(message: Message<true>, config: BotGuildConfig, api:
       if (blocked) {
         matched = true;
         explanation = "blocked phrase";
+      }
+    }
+    if (rule.kind === "blocked_domains") {
+      const values = Array.isArray(rule.conditions.values) ? rule.conditions.values.filter((value): value is string => typeof value === "string") : [];
+      const content = normalize(message.content);
+      const blocked = values.find((value) => content.includes(normalize(value).replace(/^https?:\/\//, "").replace(/\/$/, "")));
+      if (blocked) {
+        matched = true;
+        explanation = "blocked domain";
+      }
+    }
+    if (rule.kind === "new_account") {
+      const minimumDays = typeof rule.conditions.minimumAccountAgeDays === "number" ? rule.conditions.minimumAccountAgeDays : 3;
+      if ((Date.now() - message.author.createdTimestamp) / 86_400_000 < minimumDays && /https?:\/\/|(?:discord\.gg|discord(?:app)?\.com\/invite)\//i.test(message.content)) {
+        matched = true;
+        explanation = `link from an account younger than ${minimumDays} day${minimumDays === 1 ? "" : "s"}`;
       }
     }
     if (rule.kind === "duplicate") {
@@ -151,7 +172,8 @@ async function applyLevelRole(message: Message<true>, member: GuildMember, confi
   if (announcementChannelId) {
     const channel = await message.guild.channels.fetch(announcementChannelId).catch(() => null);
     if (channel?.isTextBased() && !channel.isDMBased() && "send" in channel) {
-      await channel.send({ content: `${member} reached **level ${currentLevel}**.`, allowedMentions: { users: [member.id] } }).catch(() => undefined);
+      const template = config.settings?.settings.messages?.levelUp ?? { content: "{mention} reached **level {level}**." };
+      await channel.send(configuredMessage(template, { user: member.id, mention: `<@${member.id}>`, username: member.user.username, server: message.guild.name, memberCount: message.guild.memberCount, level: currentLevel })).catch(() => undefined);
     }
   }
 }

@@ -10,17 +10,20 @@ import {
 import { checkModerationHierarchy } from "@/packages/core/src/permissions";
 import { formatDuration, parseDuration } from "@/packages/core/src/duration";
 import { PublicError } from "../errors";
+import { configuredMessage } from "../messages";
+import type { OnyxApiClient } from "../api-client";
+import { sendGuildLog } from "../events/logging";
 import type { OnyxCommand } from "./types";
 
-function reason(interaction: ChatInputCommandInteraction) {
+export function reason(interaction: ChatInputCommandInteraction) {
   return interaction.options.getString("reason")?.trim() || "No reason was provided.";
 }
 
-async function targetMember(interaction: ChatInputCommandInteraction<"cached">, user: User) {
+export async function targetMember(interaction: ChatInputCommandInteraction<"cached">, user: User) {
   return interaction.guild.members.fetch(user.id).catch(() => null);
 }
 
-function assertHierarchy(interaction: ChatInputCommandInteraction<"cached">, target: GuildMember) {
+export function assertHierarchy(interaction: ChatInputCommandInteraction<"cached">, target: GuildMember) {
   const actor = interaction.member;
   const bot = interaction.guild.members.me;
   if (!bot) throw new PublicError("Onyx could not confirm its role in this server.");
@@ -33,7 +36,7 @@ function assertHierarchy(interaction: ChatInputCommandInteraction<"cached">, tar
   if (!result.allowed) throw new PublicError(result.reason);
 }
 
-async function replyCase(interaction: ChatInputCommandInteraction<"cached">, message: string, caseNumber: number) {
+export async function replyCase(interaction: ChatInputCommandInteraction<"cached">, message: string, caseNumber: number, api?: OnyxApiClient) {
   await interaction.editReply({
     embeds: [
       new EmbedBuilder()
@@ -42,6 +45,10 @@ async function replyCase(interaction: ChatInputCommandInteraction<"cached">, mes
         .setDescription(`Recorded as case **#${caseNumber}**.`)
         .setTimestamp(),
     ],
+  });
+  if (api) await sendGuildLog(interaction.guild, api, "moderation", {
+    embeds: [new EmbedBuilder().setColor(0xd7a556).setTitle(`Moderation case #${caseNumber}`).setDescription(message).addFields({ name: "Moderator", value: `${interaction.user} · ${interaction.user.id}` }).setTimestamp()],
+    allowedMentions: { parse: [] },
   });
 }
 
@@ -81,7 +88,7 @@ const ban: OnyxCommand = {
       durationMs: durationMs ?? undefined,
       expiresAt: durationMs ? new Date(Date.now() + durationMs) : undefined,
     });
-    await replyCase(interaction, `${user.username} was ${durationMs ? `banned for ${formatDuration(durationMs)}` : "banned"}.`, record.case.caseNumber);
+    await replyCase(interaction, `${user.username} was ${durationMs ? `banned for ${formatDuration(durationMs)}` : "banned"}.`, record.case.caseNumber, api);
   },
 };
 
@@ -104,7 +111,7 @@ const unban: OnyxCommand = {
     const user = await interaction.guild.bans.remove(userId, `${moderationReason} — ${interaction.user.username}`).catch(() => null);
     if (!user) throw new PublicError("I could not find an active ban for that user.");
     const record = await api.createCase({ guildId: interaction.guildId, targetUserId: userId, moderatorUserId: interaction.user.id, action: "unban", reason: moderationReason });
-    await replyCase(interaction, `${user.username}'s ban was lifted.`, record.case.caseNumber);
+    await replyCase(interaction, `${user.username}'s ban was lifted.`, record.case.caseNumber, api);
   },
 };
 
@@ -129,7 +136,7 @@ const kick: OnyxCommand = {
     const moderationReason = reason(interaction);
     await member.kick(`${moderationReason} — ${interaction.user.username}`);
     const record = await api.createCase({ guildId: interaction.guildId, targetUserId: user.id, moderatorUserId: interaction.user.id, action: "kick", reason: moderationReason });
-    await replyCase(interaction, `${user.username} was removed from the server.`, record.case.caseNumber);
+    await replyCase(interaction, `${user.username} was removed from the server.`, record.case.caseNumber, api);
   },
 };
 
@@ -165,7 +172,7 @@ const timeout: OnyxCommand = {
       durationMs,
       expiresAt: new Date(Date.now() + durationMs),
     });
-    await replyCase(interaction, `${user.username} was timed out for ${formatDuration(durationMs)}.`, record.case.caseNumber);
+    await replyCase(interaction, `${user.username} was timed out for ${formatDuration(durationMs)}.`, record.case.caseNumber, api);
   },
 };
 
@@ -189,7 +196,7 @@ const untimeout: OnyxCommand = {
     const moderationReason = reason(interaction);
     await member.timeout(null, `${moderationReason} — ${interaction.user.username}`);
     const record = await api.createCase({ guildId: interaction.guildId, targetUserId: user.id, moderatorUserId: interaction.user.id, action: "untimeout", reason: moderationReason });
-    await replyCase(interaction, `${user.username}'s timeout was removed.`, record.case.caseNumber);
+    await replyCase(interaction, `${user.username}'s timeout was removed.`, record.case.caseNumber, api);
   },
 };
 
@@ -214,6 +221,18 @@ const warn: OnyxCommand = {
     const result = await api.warn({ guildId: interaction.guildId, userId: user.id, moderatorUserId: interaction.user.id, reason: moderationReason });
     let escalation = "";
     const guildConfig = await api.getGuildConfig(interaction.guildId, true);
+    const warningDm = guildConfig.settings?.settings.messages?.warningDm;
+    if (warningDm) {
+      await user.send(configuredMessage(warningDm, {
+        user: user.id,
+        mention: `<@${user.id}>`,
+        username: user.username,
+        server: interaction.guild.name,
+        memberCount: interaction.guild.memberCount,
+        moderator: interaction.user.username,
+        reason: moderationReason,
+      })).catch(() => undefined);
+    }
     const threshold = guildConfig.settings?.settings.warningThresholds?.find((item) => item.count === result.activeCount);
     if (threshold) {
       try {
@@ -236,6 +255,7 @@ const warn: OnyxCommand = {
       }
     }
     await interaction.editReply(`Warning #${result.warning.caseNumber} was added for ${user.username}. They now have ${result.activeCount} active warning${result.activeCount === 1 ? "" : "s"}.${escalation}`);
+    await sendGuildLog(interaction.guild, api, "moderation", { embeds: [new EmbedBuilder().setColor(0xd7a556).setTitle(`Warning case #${result.warning.caseNumber}`).setDescription(`${user} received a warning.\n\n**Reason**\n${moderationReason}`).addFields({ name: "Active warnings", value: String(result.activeCount), inline: true }, { name: "Moderator", value: `${interaction.user}`, inline: true }).setTimestamp()], allowedMentions: { parse: [] } });
   },
 };
 
@@ -294,6 +314,7 @@ const purge: OnyxCommand = {
       relatedChannelId: interaction.channelId,
     });
     await interaction.editReply(`${moderationReason} Case #${record.case.caseNumber}. Messages older than 14 days were left alone.`);
+    await sendGuildLog(interaction.guild, api, "moderation", { embeds: [new EmbedBuilder().setColor(0xd7a556).setTitle(`Moderation case #${record.case.caseNumber}`).setDescription(moderationReason).addFields({ name: "Moderator", value: `${interaction.user}` }).setTimestamp()], allowedMentions: { parse: [] } });
   },
 };
 
@@ -323,6 +344,7 @@ function channelControl(name: "lock" | "unlock"): OnyxCommand {
         relatedChannelId: interaction.channelId,
       });
       await interaction.editReply(`This channel is now ${lock ? "locked" : "open again"}. Case #${record.case.caseNumber}.`);
+      await sendGuildLog(interaction.guild, api, "moderation", { embeds: [new EmbedBuilder().setColor(0xd7a556).setTitle(`Moderation case #${record.case.caseNumber}`).setDescription(`<#${interaction.channelId}> is now ${lock ? "locked" : "open"}.`).addFields({ name: "Moderator", value: `${interaction.user}` }).setTimestamp()], allowedMentions: { parse: [] } });
     },
   };
 }
@@ -345,6 +367,7 @@ const slowmode: OnyxCommand = {
     await channel.setRateLimitPerUser(seconds, `Changed by ${interaction.user.username}`);
     const record = await api.createCase({ guildId: interaction.guildId, targetUserId: interaction.guildId, moderatorUserId: interaction.user.id, action: "slowmode", reason: seconds ? `Set to ${seconds} seconds.` : "Disabled.", relatedChannelId: interaction.channelId });
     await interaction.editReply(`${seconds ? `Slowmode is now ${seconds} second${seconds === 1 ? "" : "s"}.` : "Slowmode is now off."} Case #${record.case.caseNumber}.`);
+    await sendGuildLog(interaction.guild, api, "moderation", { embeds: [new EmbedBuilder().setColor(0xd7a556).setTitle(`Moderation case #${record.case.caseNumber}`).setDescription(`<#${interaction.channelId}> slowmode: ${seconds ? `${seconds} seconds` : "off"}.`).addFields({ name: "Moderator", value: `${interaction.user}` }).setTimestamp()], allowedMentions: { parse: [] } });
   },
 };
 

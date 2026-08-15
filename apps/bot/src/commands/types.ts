@@ -9,7 +9,7 @@ export interface CommandContext {
 
 export interface OnyxCommand {
   data: Pick<SlashCommandBuilder, "name" | "toJSON">;
-  category: "Moderation" | "Community" | "Levels" | "Utilities" | "Information";
+  category: "Moderation" | "Administration" | "Community" | "Giveaways" | "Levels" | "Tickets" | "Utilities" | "Information";
   module?: GuildModule;
   userPermissions?: PermissionResolvable[];
   botPermissions?: PermissionResolvable[];

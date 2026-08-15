@@ -61,7 +61,7 @@ export async function createModerationCase(input: {
 export async function scheduleTemporaryAction(input: {
   guildId: string;
   userId: string;
-  action: "unban" | "untimeout" | "remove_role" | "unlock_channel";
+  action: "unban" | "untimeout" | "remove_role" | "unlock_channel" | "add_roles";
   dueAt: Date;
   payload?: Record<string, string>;
 }) {

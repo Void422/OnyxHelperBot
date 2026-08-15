@@ -7,6 +7,7 @@ import {
   type StringSelectMenuInteraction,
 } from "discord.js";
 import type { OnyxCommand } from "./types";
+import { commandCatalog } from "./catalog";
 
 const ping: OnyxCommand = {
   data: new SlashCommandBuilder().setName("ping").setDescription("Check whether Onyx is online and responding normally."),
@@ -93,18 +94,36 @@ const serverinfo: OnyxCommand = {
   },
 };
 
-const helpCategories = [
-  { label: "Moderation", value: "moderation", description: "Cases, warnings, timeouts, bans, and channel controls" },
-  { label: "Community", value: "community", description: "Giveaways and member-facing community tools" },
-  { label: "Levels", value: "levels", description: "XP progress and rank tools" },
-  { label: "Utilities", value: "utilities", description: "Quick Discord and server information" },
-];
+const categoryDescriptions: Record<string, string> = {
+  Moderation: "Cases, warnings, timeouts, bans, and channel controls",
+  Administration: "Roles, announcements, channels, and staff operations",
+  Community: "Member-facing community tools",
+  Giveaways: "Durable giveaways and fair winner selection",
+  Levels: "XP progress, leaderboards, and staff adjustments",
+  Tickets: "Private support channels and staff workflows",
+  Utilities: "Quick tools for everyday Discord work",
+  Information: "Member, server, role, and channel information",
+};
+
+function helpCategories() {
+  return [...new Set(commandCatalog().map((command) => command.category))].map((category) => ({
+    label: category,
+    value: category.toLocaleLowerCase(),
+    description: categoryDescriptions[category]?.slice(0, 100) ?? "Onyx commands",
+  }));
+}
 
 function helpEmbed(category = "home") {
-  if (category === "moderation") return new EmbedBuilder().setColor(0x2b2d31).setTitle("Moderation").setDescription("`/ban` · `/unban` · `/kick` · `/warn` · `/warnings` · `/timeout` · `/untimeout` · `/purge` · `/lock` · `/unlock` · `/slowmode`\n\nOnyx checks both moderator and bot role hierarchy before acting. Significant actions create a server case.");
-  if (category === "community") return new EmbedBuilder().setColor(0x2b2d31).setTitle("Community").setDescription("`/giveaway create`\n\nGiveaways store entries and end times outside the Discord message, so restarts do not lose them.");
-  if (category === "levels") return new EmbedBuilder().setColor(0x2b2d31).setTitle("Levels").setDescription("`/rank`\n\nXP uses cooldowns, duplicate detection, and low-signal filtering. It rewards participation, not message spam.");
-  if (category === "utilities") return new EmbedBuilder().setColor(0x2b2d31).setTitle("Utilities & information").setDescription("`/ping` · `/uptime` · `/avatar` · `/userinfo` · `/serverinfo`\n\nThese commands are available without staff permissions.");
+  const categoryName = helpCategories().find((item) => item.value === category)?.label;
+  if (categoryName) {
+    const entries = commandCatalog().filter((command) => command.category === categoryName).map((command) => {
+      const data = command.data.toJSON();
+      const subcommands = (data.options ?? []).filter((option) => option.type === 1).map((option) => option.name);
+      const names = subcommands.length ? subcommands.map((name) => `\`/${data.name} ${name}\``).join(" · ") : `\`/${data.name}\``;
+      return `${names}\n${data.description}`;
+    });
+    return new EmbedBuilder().setColor(0x2b2d31).setTitle(categoryName).setDescription(entries.join("\n\n").slice(0, 4_096)).setFooter({ text: `${entries.length} command${entries.length === 1 ? "" : "s"} in this category` });
+  }
   return new EmbedBuilder()
     .setColor(0x1f2024)
     .setTitle("How can Onyx help?")
@@ -115,7 +134,7 @@ function helpEmbed(category = "home") {
 function helpComponents() {
   return [
     new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
-      new StringSelectMenuBuilder().setCustomId("help:category").setPlaceholder("Browse command categories").addOptions(helpCategories),
+      new StringSelectMenuBuilder().setCustomId("help:category").setPlaceholder("Browse command categories").addOptions(helpCategories()),
     ),
   ];
 }

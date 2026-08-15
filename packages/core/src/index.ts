@@ -5,3 +5,5 @@ export * from "./leveling";
 export * from "./permissions";
 export * from "./validation";
 export * from "./xp-policy";
+export * from "./template";
+export * from "./command-catalog";

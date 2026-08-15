@@ -11,7 +11,7 @@ export interface BotGuildConfig {
     settings: GuildSettingsData;
     version: number;
   } | null;
-  logs: { channels: Record<string, string> } | null;
+  logs: { channels: Record<string, string>; includeModerator: boolean; retentionDays: number } | null;
   automodRules: Array<{
     id: string;
     kind: string;
@@ -78,6 +78,21 @@ export class OnyxApiClient {
     return this.request<{ case: { id: string; caseNumber: number } }>("/api/internal/cases", { method: "POST", body: JSON.stringify(input) });
   }
 
+  getCases(guildId: string, userId?: string) {
+    const query = new URLSearchParams({ guildId });
+    if (userId) query.set("userId", userId);
+    return this.request<{ cases: ModerationCaseRecord[] }>(`/api/internal/cases?${query}`);
+  }
+
+  getCase(guildId: string, caseNumber: number) {
+    const query = new URLSearchParams({ guildId, caseNumber: String(caseNumber) });
+    return this.request<{ case: ModerationCaseRecord }>(`/api/internal/cases?${query}`);
+  }
+
+  updateCaseReason(input: { guildId: string; caseNumber: number; moderatorUserId: string; reason: string }) {
+    return this.request<{ case: ModerationCaseRecord }>("/api/internal/cases", { method: "PATCH", body: JSON.stringify(input) });
+  }
+
   warn(input: { guildId: string; userId: string; moderatorUserId: string; reason: string; expiresAt?: Date }) {
     return this.request<{ warning: { id: string; caseNumber: number }; activeCount: number }>("/api/internal/warnings", {
       method: "POST",
@@ -87,7 +102,24 @@ export class OnyxApiClient {
 
   getWarnings(guildId: string, userId: string) {
     const query = new URLSearchParams({ guildId, userId });
-    return this.request<{ warnings: Array<{ id: string; reason: string; moderatorUserId: string; createdAt: string }> }>(`/api/internal/warnings?${query}`);
+    return this.request<{ warnings: Array<{ id: string; caseNumber: number | null; reason: string; moderatorUserId: string; createdAt: string }> }>(`/api/internal/warnings?${query}`);
+  }
+
+  removeWarning(input: { guildId: string; userId: string; moderatorUserId: string; warningId?: string; clearAll?: boolean }) {
+    return this.request<{ removedCount: number }>("/api/internal/warnings", { method: "DELETE", body: JSON.stringify(input) });
+  }
+
+  getModeratorNotes(guildId: string, userId: string) {
+    const query = new URLSearchParams({ guildId, userId });
+    return this.request<{ notes: ModeratorNoteRecord[] }>(`/api/internal/notes?${query}`);
+  }
+
+  addModeratorNote(input: { guildId: string; userId: string; moderatorUserId: string; note: string }) {
+    return this.request<{ note: ModeratorNoteRecord }>("/api/internal/notes", { method: "POST", body: JSON.stringify(input) });
+  }
+
+  removeModeratorNote(input: { guildId: string; noteId: string; moderatorUserId: string }) {
+    return this.request<{ removed: true }>("/api/internal/notes", { method: "DELETE", body: JSON.stringify(input) });
   }
 
   awardXp(input: { guildId: string; userId: string; award: number; occurredAt: Date }) {
@@ -100,6 +132,14 @@ export class OnyxApiClient {
   getLevelProfile(guildId: string, userId: string) {
     const query = new URLSearchParams({ guildId, userId });
     return this.request<{ profile: { xp: number; messageCount: number; rank: number }; level: number }>(`/api/internal/xp/profile?${query}`);
+  }
+
+  adjustXp(input: { guildId: string; userId: string; moderatorUserId: string; operation: "add" | "remove" | "set"; amount: number; reason: string }) {
+    return this.request<{ profile: { xp: number; messageCount: number }; level: number }>("/api/internal/xp/profile", { method: "PATCH", body: JSON.stringify(input) });
+  }
+
+  getLeaderboard(guildId: string) {
+    return this.request<{ leaderboard: Array<{ userId: string; xp: number; messageCount: number; weeklyXp: number; rank: number; level: number }> }>(`/api/internal/xp/leaderboard?${new URLSearchParams({ guildId })}`);
   }
 
   createGiveaway(input: {
@@ -115,12 +155,84 @@ export class OnyxApiClient {
     return this.request<{ giveaway: { id: string } }>("/api/internal/giveaways", { method: "POST", body: JSON.stringify(input) });
   }
 
+  listGiveaways(guildId: string) {
+    return this.request<{ giveaways: GiveawayRecord[] }>(`/api/internal/giveaways/manage?${new URLSearchParams({ guildId })}`);
+  }
+
+  getGiveaway(guildId: string, giveawayId: string) {
+    return this.request<{ giveaway: GiveawayRecord; entryCount: number }>(`/api/internal/giveaways/manage?${new URLSearchParams({ guildId, giveawayId })}`);
+  }
+
+  manageGiveaway(input: { guildId: string; giveawayId: string; actorUserId: string; action: "end" | "reroll" | "pause" | "resume" | "edit"; prize?: string; description?: string | null; winnerCount?: number; endsAt?: Date }) {
+    return this.request<{ giveaway: GiveawayRecord }>("/api/internal/giveaways/manage", { method: "PATCH", body: JSON.stringify(input) });
+  }
+
   setGiveawayMessage(giveawayId: string, messageId: string) {
     return this.request<{ ok: true }>(`/api/internal/giveaways/${giveawayId}/message`, { method: "PATCH", body: JSON.stringify({ messageId }) });
   }
 
   enterGiveaway(giveawayId: string, input: { userId: string; roleIds: string[]; accountCreatedAt: Date; joinedAt: Date }) {
     return this.request<{ entered: true; entries: number }>(`/api/internal/giveaways/${giveawayId}/enter`, { method: "POST", body: JSON.stringify(input) });
+  }
+
+  scheduleAutoroles(input: { guildId: string; userId: string; roleIds: string[]; dueAt: Date }) {
+    return this.request<{ ok: true }>("/api/internal/jobs/autoroles", { method: "POST", body: JSON.stringify(input) });
+  }
+
+  createTicket(input: { guildId: string; channelId: string; ownerUserId: string; department?: string }) {
+    return this.request<{ ticket: TicketRecord }>("/api/internal/tickets", { method: "POST", body: JSON.stringify(input) });
+  }
+
+  getTicket(guildId: string, channelId: string) {
+    return this.request<{ ticket: TicketRecord; participants: Array<{ userId: string }> }>(`/api/internal/tickets?${new URLSearchParams({ guildId, channelId })}`);
+  }
+
+  getOpenTickets(guildId: string, ownerUserId: string) {
+    return this.request<{ tickets: TicketRecord[] }>(`/api/internal/tickets?${new URLSearchParams({ guildId, ownerUserId })}`);
+  }
+
+  updateTicket(input: { guildId: string; channelId: string; actorUserId: string; action: "claim" | "close" | "reopen" | "participant_add" | "participant_remove"; userId?: string; reason?: string }) {
+    return this.request<{ ticket: TicketRecord }>("/api/internal/tickets", { method: "PATCH", body: JSON.stringify(input) });
+  }
+
+  createReminder(input: { userId: string; guildId?: string; channelId?: string; message: string; dueAt: Date }) {
+    return this.request<{ reminder: ReminderRecord }>("/api/internal/reminders", { method: "POST", body: JSON.stringify(input) });
+  }
+
+  getReminders(userId: string) {
+    return this.request<{ reminders: ReminderRecord[] }>(`/api/internal/reminders?${new URLSearchParams({ userId })}`);
+  }
+
+  deleteReminder(userId: string, reminderId: string) {
+    return this.request<{ removed: true }>("/api/internal/reminders", { method: "DELETE", body: JSON.stringify({ userId, reminderId }) });
+  }
+
+  claimDueReminders() {
+    return this.request<{ reminders: ReminderRecord[] }>("/api/internal/reminders/due", { method: "POST" });
+  }
+
+  completeReminder(reminderId: string, success: boolean) {
+    return this.request<{ ok: true }>("/api/internal/reminders/due", { method: "PATCH", body: JSON.stringify({ reminderId, success }) });
+  }
+
+  createSuggestion(input: { guildId: string; authorUserId: string; content: string; anonymous: boolean }) {
+    return this.request<{ suggestion: SuggestionRecord }>("/api/internal/suggestions", { method: "POST", body: JSON.stringify(input) });
+  }
+
+  listSuggestions(guildId: string) {
+    return this.request<{ suggestions: SuggestionRecord[] }>(`/api/internal/suggestions?${new URLSearchParams({ guildId })}`);
+  }
+
+  updateSuggestion(input: { guildId: string; suggestionNumber: number; actorUserId: string; action: "message" | "approved" | "denied" | "implemented" | "duplicate"; messageId?: string; response?: string }) {
+    return this.request<{ suggestion: SuggestionRecord }>("/api/internal/suggestions", { method: "PATCH", body: JSON.stringify(input) });
+  }
+
+  claimStarboard(input: { guildId: string; sourceMessageId: string; sourceChannelId: string; starCount: number }) {
+    return this.request<{ created: boolean; entry: StarboardEntry }>("/api/internal/starboard", { method: "POST", body: JSON.stringify(input) });
+  }
+
+  updateStarboard(input: { guildId: string; sourceMessageId: string; sourceChannelId: string; starCount: number; starboardMessageId: string }) {
+    return this.request<{ entry: StarboardEntry }>("/api/internal/starboard", { method: "PATCH", body: JSON.stringify(input) });
   }
 
   claimDueTemporaryJobs() {
@@ -143,8 +255,30 @@ export interface TemporaryJob {
   id: string;
   guild_id: string;
   user_id: string;
-  action: "unban" | "untimeout" | "remove_role" | "unlock_channel";
+  action: "unban" | "untimeout" | "remove_role" | "unlock_channel" | "add_roles";
   payload: string | Record<string, string>;
+}
+
+export interface ModerationCaseRecord {
+  id: string;
+  caseNumber: number;
+  targetUserId: string;
+  moderatorUserId: string;
+  action: string;
+  reason: string;
+  durationMs: number | null;
+  expiresAt: string | null;
+  active: boolean;
+  automated: boolean;
+  createdAt: string;
+}
+
+export interface ModeratorNoteRecord {
+  id: string;
+  userId: string;
+  moderatorUserId: string;
+  note: string;
+  createdAt: string;
 }
 
 export interface EndedGiveaway {
@@ -155,4 +289,65 @@ export interface EndedGiveaway {
   prize: string;
   winnerUserIds: string[];
   eligibleEntryCount: number;
+}
+
+export interface GiveawayRecord {
+  id: string;
+  guildId: string;
+  channelId: string;
+  messageId: string | null;
+  hostUserId: string;
+  prize: string;
+  description: string | null;
+  winnerCount: number;
+  status: "scheduled" | "active" | "paused" | "ending" | "ended" | "cancelled";
+  endsAt: string;
+  winnerUserIds: string[];
+  eligibleEntryCount: number | null;
+  rerollCount: number;
+}
+
+export interface TicketRecord {
+  id: string;
+  guildId: string;
+  ticketNumber: number;
+  channelId: string;
+  ownerUserId: string;
+  department: string;
+  status: "open" | "claimed" | "closed";
+  claimedBy: string | null;
+  closeReason: string | null;
+  closedAt: string | null;
+  createdAt: string;
+}
+
+export interface ReminderRecord {
+  id: string;
+  userId: string;
+  guildId: string | null;
+  channelId: string | null;
+  message: string;
+  dueAt: string;
+  status: "pending" | "processing" | "sent" | "cancelled" | "failed";
+}
+
+export interface SuggestionRecord {
+  id: string;
+  guildId: string;
+  suggestionNumber: number;
+  authorUserId: string;
+  content: string;
+  messageId: string | null;
+  status: "open" | "approved" | "denied" | "implemented" | "duplicate";
+  staffResponse: string | null;
+  anonymous: boolean;
+  createdAt: string;
+}
+
+export interface StarboardEntry {
+  sourceMessageId: string;
+  guildId: string;
+  sourceChannelId: string;
+  starboardMessageId: string | null;
+  starCount: number;
 }

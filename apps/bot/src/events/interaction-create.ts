@@ -1,6 +1,7 @@
 import { MessageFlags, type Interaction } from "discord.js";
 import { commandMap } from "../commands";
 import { handleHelpSelect } from "../commands/utility";
+import { handleTicketButton } from "../commands/tickets";
 import type { OnyxApiClient } from "../api-client";
 import { errorReference, PublicError } from "../errors";
 import { logger } from "../logger";
@@ -35,6 +36,11 @@ export async function handleInteraction(interaction: Interaction, api: OnyxApiCl
       return;
     }
 
+    if (interaction.isButton() && interaction.customId.startsWith("ticket:")) {
+      await handleTicketButton(interaction, api);
+      return;
+    }
+
     if (!interaction.isChatInputCommand()) return;
     if (!interaction.inCachedGuild()) throw new PublicError("This command is only available inside a server.");
     const command = commandMap.get(interaction.commandName);
@@ -47,17 +53,23 @@ export async function handleInteraction(interaction: Interaction, api: OnyxApiCl
       throw new PublicError("Onyx is missing a Discord permission needed here. Ask an administrator to review the bot role.");
     }
 
+    const guildConfig = await api.getGuildConfig(interaction.guildId);
     if (command.module) {
-      const guildConfig = await api.getGuildConfig(interaction.guildId);
       if (!guildConfig.settings?.enabledModules.includes(command.module)) {
         throw new PublicError(`The ${command.module.replace(/_/g, " ")} module is disabled for this server.`);
       }
     }
 
-    const cooldownKey = `${interaction.guildId}:${interaction.user.id}:${interaction.commandName}`;
+    const subcommand = interaction.options.getSubcommand(false);
+    const commandKey = subcommand ? `${interaction.commandName}.${subcommand}` : interaction.commandName;
+    const override = guildConfig.settings?.settings.commandOverrides?.[commandKey] ?? guildConfig.settings?.settings.commandOverrides?.[interaction.commandName];
+    if (override?.enabled === false) throw new PublicError("An administrator disabled that command for this server.");
+
+    const cooldownKey = `${interaction.guildId}:${interaction.user.id}:${commandKey}`;
     const readyAt = cooldowns.get(cooldownKey) ?? 0;
     if (readyAt > Date.now()) throw new PublicError(`Give that command another ${Math.ceil((readyAt - Date.now()) / 1_000)} seconds.`);
-    if (command.cooldownSeconds) cooldowns.set(cooldownKey, Date.now() + command.cooldownSeconds * 1_000);
+    const cooldownSeconds = override?.cooldownSeconds ?? command.cooldownSeconds;
+    if (cooldownSeconds) cooldowns.set(cooldownKey, Date.now() + cooldownSeconds * 1_000);
 
     logger.info({ event: "command.started", command: interaction.commandName, guildId: interaction.guildId, userId: interaction.user.id });
     await command.execute({ interaction, api });
