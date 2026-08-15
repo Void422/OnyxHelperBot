@@ -3,62 +3,278 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#09090b" />
-    <meta name="description" content="Launch Onyx, the Discord management platform for moderation, appeals, giveaways, leveling, and server configuration." />
-    <meta property="og:title" content="Onyx — Your server, under control." />
-    <meta property="og:description" content="A focused Discord management platform built for real community operations." />
-    <meta property="og:image" content="https://onyx-helper.quatnumgaming.chatgpt.site/og.png" />
-    <title>Onyx — Your server, under control.</title>
+    <meta name="theme-color" content="#090806" />
+    <meta
+      name="description"
+      content="Onyx is a configurable Discord operations platform with 51 slash commands, 77 actions, automod, tickets, levels, messages, community tools, and routed logs."
+    />
+    <meta property="og:title" content="Onyx — Discord operations, under control." />
+    <meta
+      property="og:description"
+      content="51 slash commands. 77 configurable actions. One focused control plane for your Discord community."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://onyx-helper.quatnumgaming.chatgpt.site/og-v2.png" />
+    <title>Onyx — Discord operations, under control.</title>
     <style>
-      :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #09090b; color: #f5f5f5; }
+      :root {
+        color-scheme: dark;
+        --ink: #090806;
+        --surface: #11100d;
+        --surface-2: #171510;
+        --line: rgba(255, 255, 255, 0.1);
+        --text: #f7f2e8;
+        --muted: #aaa295;
+        --amber: #f6b83d;
+        --amber-soft: #ffdc86;
+        --green: #9ee6b0;
+        --radius: 22px;
+      }
+
       * { box-sizing: border-box; }
-      body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 78% 18%, rgba(109, 94, 252, .14), transparent 26rem), linear-gradient(180deg, #0d0d10 0%, #08080a 100%); }
+
+      html { scroll-behavior: smooth; }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+        background:
+          radial-gradient(circle at 82% 6%, rgba(246, 184, 61, 0.1), transparent 28rem),
+          linear-gradient(180deg, #0c0b08 0%, var(--ink) 45%, #070706 100%);
+        color: var(--text);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.5;
+      }
+
       a { color: inherit; }
-      .shell { width: min(1120px, calc(100% - 40px)); margin: 0 auto; }
-      header { display: flex; align-items: center; justify-content: space-between; padding: 28px 0; }
-      .brand { display: inline-flex; align-items: center; gap: 11px; font-weight: 760; letter-spacing: .11em; text-decoration: none; }
-      .mark { width: 27px; height: 27px; transform: rotate(45deg); border: 1px solid #89898f; background: linear-gradient(145deg, #f4f4f5 0 46%, #6d5efc 47% 100%); box-shadow: 0 0 34px rgba(109, 94, 252, .24); }
-      .status { padding: 8px 12px; border: 1px solid #29292f; border-radius: 999px; color: #aaaab2; font-size: 13px; }
-      main { padding: 100px 0 72px; }
-      .eyebrow { color: #96969f; letter-spacing: .14em; text-transform: uppercase; font-size: 12px; font-weight: 700; }
-      h1 { max-width: 780px; margin: 22px 0; font-size: clamp(48px, 8vw, 92px); line-height: .98; letter-spacing: -.065em; }
-      .lead { max-width: 640px; margin: 0; color: #aaaab2; font-size: clamp(18px, 2.2vw, 22px); line-height: 1.62; }
-      .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 36px; }
-      .button { display: inline-flex; min-height: 48px; align-items: center; justify-content: center; border: 1px solid #303036; border-radius: 10px; padding: 0 18px; text-decoration: none; font-weight: 700; }
-      .button.primary { border-color: #f5f5f5; background: #f5f5f5; color: #0a0a0c; }
-      .button:hover { transform: translateY(-1px); border-color: #686871; }
-      .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 96px; }
-      .card { min-height: 174px; padding: 24px; border: 1px solid #242429; border-radius: 14px; background: rgba(17, 17, 20, .78); }
-      .card span { color: #6d5efc; font-size: 12px; font-weight: 800; letter-spacing: .12em; }
-      .card h2 { margin: 40px 0 8px; font-size: 18px; }
-      .card p { margin: 0; color: #8f8f98; line-height: 1.55; font-size: 14px; }
-      footer { display: flex; justify-content: space-between; gap: 16px; border-top: 1px solid #202024; padding: 24px 0 36px; color: #74747c; font-size: 13px; }
-      @media (max-width: 760px) { main { padding-top: 64px; } .grid { grid-template-columns: 1fr; margin-top: 64px; } footer { flex-direction: column; } }
-      @media (prefers-reduced-motion: no-preference) { .button { transition: transform .18s ease, border-color .18s ease; } }
+
+      .shell { width: min(1160px, calc(100% - 40px)); margin: 0 auto; }
+
+      nav {
+        display: flex;
+        min-height: 76px;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .brand { display: inline-flex; align-items: center; gap: 12px; font-weight: 800; letter-spacing: 0.14em; text-decoration: none; }
+      .brand-mark {
+        display: grid;
+        width: 36px;
+        height: 36px;
+        place-items: center;
+        border: 1px solid rgba(246, 184, 61, 0.45);
+        border-radius: 11px;
+        background: linear-gradient(145deg, #252117, #0d0c09);
+        color: var(--amber);
+        box-shadow: inset 0 0 22px rgba(246, 184, 61, 0.08);
+      }
+
+      .nav-links { display: flex; align-items: center; gap: 24px; color: var(--muted); font-size: 0.9rem; }
+      .nav-links a { text-decoration: none; }
+      .nav-links a:hover { color: var(--text); }
+
+      .button {
+        display: inline-flex;
+        min-height: 46px;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 0 20px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.035);
+        color: var(--text);
+        font-weight: 700;
+        text-decoration: none;
+        transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+      }
+
+      .button:hover { transform: translateY(-2px); border-color: rgba(246, 184, 61, 0.35); }
+      .button.primary { border-color: var(--amber); background: var(--amber); color: #171107; }
+      .button.primary:hover { background: var(--amber-soft); }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.04fr) minmax(390px, 0.96fr);
+        gap: 72px;
+        align-items: center;
+        min-height: 690px;
+        padding: 78px 0 92px;
+      }
+
+      .eyebrow { margin: 0 0 18px; color: var(--amber); font-size: 0.78rem; font-weight: 800; letter-spacing: 0.17em; text-transform: uppercase; }
+      h1 { max-width: 740px; margin: 0; font-size: clamp(3rem, 6.6vw, 6.35rem); line-height: 0.94; letter-spacing: -0.065em; }
+      h1 span { color: var(--amber); }
+      .lede { max-width: 650px; margin: 28px 0 0; color: var(--muted); font-size: clamp(1.05rem, 1.8vw, 1.24rem); }
+      .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
+      .trust { margin-top: 22px; color: #7f786e; font-size: 0.82rem; }
+
+      .product {
+        position: relative;
+        padding: 16px;
+        border: 1px solid rgba(246, 184, 61, 0.22);
+        border-radius: 30px;
+        background: rgba(8, 8, 7, 0.82);
+        box-shadow: 0 34px 100px rgba(0, 0, 0, 0.5), inset 0 1px rgba(255, 255, 255, 0.04);
+      }
+
+      .product::before {
+        position: absolute;
+        z-index: -1;
+        inset: -28px;
+        border-radius: 40px;
+        background: radial-gradient(circle, rgba(246, 184, 61, 0.13), transparent 70%);
+        content: "";
+        filter: blur(18px);
+      }
+
+      .product-head { display: flex; align-items: center; justify-content: space-between; padding: 8px 8px 20px; }
+      .product-title { font-weight: 800; }
+      .live { display: inline-flex; align-items: center; gap: 7px; color: var(--green); font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; }
+      .live::before { width: 7px; height: 7px; border-radius: 50%; background: currentColor; content: ""; box-shadow: 0 0 12px currentColor; }
+      .panel { overflow: hidden; border: 1px solid var(--line); border-radius: 18px; background: var(--surface); }
+      .panel-top { padding: 22px; border-bottom: 1px solid var(--line); }
+      .panel-top small { color: var(--muted); }
+      .panel-top strong { display: block; margin-top: 5px; font-size: 1.18rem; }
+      .module { display: grid; grid-template-columns: 42px 1fr auto; gap: 13px; align-items: center; padding: 17px 20px; border-bottom: 1px solid rgba(255,255,255,.065); }
+      .module:last-child { border-bottom: 0; }
+      .module-icon { display: grid; width: 38px; height: 38px; place-items: center; border: 1px solid rgba(246,184,61,.18); border-radius: 11px; background: rgba(246,184,61,.06); color: var(--amber); font-weight: 900; }
+      .module strong, .module small { display: block; }
+      .module small { margin-top: 2px; color: var(--muted); font-size: .78rem; }
+      .badge { padding: 5px 8px; border: 1px solid rgba(158,230,176,.2); border-radius: 999px; background: rgba(158,230,176,.06); color: var(--green); font-size: .68rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+
+      .proof { border-block: 1px solid var(--line); background: rgba(255,255,255,.018); }
+      .proof-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
+      .stat { padding: 32px 24px; border-right: 1px solid var(--line); }
+      .stat:last-child { border-right: 0; }
+      .stat strong { display: block; color: var(--amber-soft); font-size: 2rem; letter-spacing: -.04em; }
+      .stat span { color: var(--muted); font-size: .82rem; }
+
+      .section { padding: 104px 0; }
+      .section h2 { max-width: 690px; margin: 0; font-size: clamp(2rem, 4.5vw, 4rem); line-height: 1; letter-spacing: -.055em; }
+      .section-intro { max-width: 620px; margin: 20px 0 48px; color: var(--muted); font-size: 1.04rem; }
+      .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+      .card { min-height: 245px; padding: 28px; border: 1px solid var(--line); border-radius: var(--radius); background: linear-gradient(150deg, rgba(255,255,255,.035), rgba(255,255,255,.012)); }
+      .card-number { color: var(--amber); font-size: .72rem; font-weight: 800; letter-spacing: .13em; }
+      .card h3 { margin: 58px 0 10px; font-size: 1.25rem; }
+      .card p { margin: 0; color: var(--muted); font-size: .92rem; }
+
+      .launch {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 32px;
+        margin-bottom: 96px;
+        padding: 42px;
+        border: 1px solid rgba(246,184,61,.24);
+        border-radius: 28px;
+        background: linear-gradient(130deg, rgba(246,184,61,.09), rgba(255,255,255,.02));
+      }
+      .launch h2 { margin: 0; font-size: clamp(1.7rem, 3.4vw, 3rem); line-height: 1.05; letter-spacing: -.045em; }
+      .launch p { max-width: 610px; margin: 12px 0 0; color: var(--muted); }
+      footer { display: flex; justify-content: space-between; gap: 24px; padding: 28px 0 42px; border-top: 1px solid var(--line); color: #817a70; font-size: .8rem; }
+
+      @media (max-width: 900px) {
+        .hero { grid-template-columns: 1fr; min-height: auto; gap: 56px; }
+        .product { max-width: 650px; }
+        .proof-grid { grid-template-columns: repeat(2, 1fr); }
+        .stat:nth-child(2) { border-right: 0; }
+        .stat:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+        .grid { grid-template-columns: 1fr; }
+        .card { min-height: 200px; }
+        .card h3 { margin-top: 36px; }
+      }
+
+      @media (max-width: 620px) {
+        .shell { width: min(100% - 26px, 1160px); }
+        .nav-links a:not(.button) { display: none; }
+        .hero { padding-top: 60px; }
+        h1 { font-size: clamp(3rem, 16vw, 4.5rem); }
+        .product { padding: 10px; border-radius: 22px; }
+        .module { grid-template-columns: 38px 1fr; padding: 15px; }
+        .badge { grid-column: 2; width: max-content; }
+        .stat { padding: 24px 16px; }
+        .section { padding: 76px 0; }
+        .launch { display: block; padding: 28px; }
+        .launch .button { margin-top: 24px; width: 100%; }
+        footer { display: block; }
+        footer span { display: block; margin-top: 8px; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        *, *::before, *::after { transition-duration: .01ms !important; }
+      }
     </style>
   </head>
   <body>
-    <div class="shell">
-      <header>
-        <a class="brand" href="https://onyx-helper.quatnumgaming.chatgpt.site/"><span class="mark" aria-hidden="true"></span> ONYX</a>
-        <span class="status">GitHub Pages mirror</span>
-      </header>
-      <main>
-        <p class="eyebrow">Discord management, without the noise</p>
-        <h1>Your server,<br />under control.</h1>
-        <p class="lead">Onyx brings moderation, appeals, giveaways, leveling, configuration, and accountable server operations into one focused workspace.</p>
-        <div class="actions">
-          <a class="button primary" href="https://onyx-helper.quatnumgaming.chatgpt.site/dashboard">Launch dashboard</a>
-          <a class="button" href="https://onyx-helper.quatnumgaming.chatgpt.site/appeal">File an appeal</a>
-          <a class="button" href="https://github.com/Void422/OnyxHelperBot">View source</a>
+    <header class="shell">
+      <nav aria-label="Primary navigation">
+        <a class="brand" href="#top" aria-label="Onyx home"><span class="brand-mark">O</span> ONYX</a>
+        <div class="nav-links">
+          <a href="#capabilities">Capabilities</a>
+          <a href="https://github.com/Void422/OnyxHelperBot">Source</a>
+          <a class="button" href="https://onyx-helper.quatnumgaming.chatgpt.site/dashboard">Open dashboard</a>
         </div>
-        <section class="grid" aria-label="Onyx capabilities">
-          <article class="card"><span>01 / MODERATION</span><h2>Decisions with context</h2><p>Durable cases, warnings, temporary actions, permission checks, and a complete audit trail.</p></article>
-          <article class="card"><span>02 / COMMUNITY</span><h2>Systems that survive restarts</h2><p>Persistent giveaways, XP progression, role rewards, and recovery-aware background work.</p></article>
-          <article class="card"><span>03 / CONTROL</span><h2>One guild at a time</h2><p>Discord OAuth, live server authorization, scoped settings, and least-privilege bot access.</p></article>
-        </section>
-      </main>
-      <footer><span>Onyx management platform</span><span>The interactive dashboard and API run on the production application host.</span></footer>
-    </div>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero shell">
+        <div>
+          <p class="eyebrow">Discord operations platform</p>
+          <h1>Discord operations, <span>under control.</span></h1>
+          <p class="lede">51 slash commands. 77 configurable actions. Dedicated workspaces for moderation, automod, tickets, levels, messages, community programs, and logs.</p>
+          <div class="actions">
+            <a class="button primary" href="https://onyx-helper.quatnumgaming.chatgpt.site/dashboard">Launch control plane →</a>
+            <a class="button" href="https://onyx-helper.quatnumgaming.chatgpt.site/appeal">Submit an appeal</a>
+          </div>
+          <p class="trust">Private server settings · Durable scheduled jobs · No fake configuration screens</p>
+        </div>
+
+        <div class="product" aria-label="Onyx dashboard preview">
+          <div class="product-head"><span class="product-title">Live control plane</span><span class="live">Operational</span></div>
+          <div class="panel">
+            <div class="panel-top"><small>Connected workspace</small><strong>Community operations</strong></div>
+            <div class="module"><span class="module-icon">/</span><span><strong>Commands</strong><small>Per-action access and cooldowns</small></span><span class="badge">Configurable</span></div>
+            <div class="module"><span class="module-icon">T</span><span><strong>Tickets</strong><small>Panels, claims, members, transcripts</small></span><span class="badge">Private</span></div>
+            <div class="module"><span class="module-icon">M</span><span><strong>Message Studio</strong><small>Embeds, media, safe placeholders</small></span><span class="badge">Live</span></div>
+            <div class="module"><span class="module-icon">L</span><span><strong>Discord logs</strong><small>Eleven event families, channel-routed</small></span><span class="badge">Routed</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="proof" aria-label="Product totals">
+        <div class="proof-grid shell">
+          <div class="stat"><strong>77</strong><span>configurable command actions</span></div>
+          <div class="stat"><strong>9</strong><span>automod rule families</span></div>
+          <div class="stat"><strong>11</strong><span>working operations modules</span></div>
+          <div class="stat"><strong>24/7</strong><span>durable reminders and jobs</span></div>
+        </div>
+      </section>
+
+      <section class="section shell" id="capabilities">
+        <p class="eyebrow">Built for real communities</p>
+        <h2>Every command, on your terms.</h2>
+        <p class="section-intro">Onyx joins bot execution and dashboard configuration into one system: what moderators configure is what the runtime enforces.</p>
+        <div class="grid">
+          <article class="card"><span class="card-number">01 / CONTROL</span><h3>Granular command policy</h3><p>Enable individual actions, set per-command cooldowns, and keep access decisions visible instead of burying them in code.</p></article>
+          <article class="card"><span class="card-number">02 / SAFETY</span><h3>Moderation with memory</h3><p>Warnings, cases, notes, mutes, softbans, audit routing, and nine automod rule families share durable server context.</p></article>
+          <article class="card"><span class="card-number">03 / COMMUNITY</span><h3>Operations beyond moderation</h3><p>Run tickets, giveaways, suggestions, levels, starboard, welcome flows, autoroles, reminders, and rich messages from focused workspaces.</p></article>
+        </div>
+      </section>
+
+      <section class="launch shell">
+        <div><h2>The dashboard is the product.</h2><p>This GitHub Pages site is the public launch surface. Authentication, private configuration, database-backed workflows, and live operations run in the hosted Onyx application.</p></div>
+        <a class="button primary" href="https://onyx-helper.quatnumgaming.chatgpt.site/">Open Onyx →</a>
+      </section>
+    </main>
+
+    <footer class="shell">
+      <strong>ONYX</strong>
+      <span>Discord operations, under control.</span>
+    </footer>
   </body>
 </html>
