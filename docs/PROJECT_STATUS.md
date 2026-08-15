@@ -27,25 +27,21 @@ The supplied product brief is a multi-release roadmap. These requested areas hav
 
 No dashboard control or metric is shown for an unimplemented subsystem.
 
-## External requirements before live operation
+## External requirements before dashboard OAuth is live
 
-- `DISCORD_TOKEN`
-- `DISCORD_CLIENT_ID`
 - `DISCORD_CLIENT_SECRET`
-- production `APP_URL` and an exactly matching Discord OAuth redirect
-- `SESSION_SECRET` with at least 32 random characters
-- `ONYX_SERVICE_TOKEN` shared only by the API and bot
-- a persistent Node.js 22+ bot host
+- the exact production callback URL registered in the Discord Developer Portal
 
 ## Known limitations
 
 - The current storage adapter targets Cloudflare D1 so the dashboard and API can ship as one worker. Shared domain logic is storage-independent, but a PostgreSQL adapter is not included.
-- Discord actions, OAuth callbacks, command registration, and restart recovery cannot be proven against a live guild without application credentials and a test server.
+- The bot connection, global command registration, API authentication, and scheduler startup are verified against one live guild. Dashboard OAuth and staff-facing actions remain unverified until the OAuth client secret and redirect are configured.
 - Uploaded images and transcript blobs are disabled until object storage and retention policy are configured.
 - The full development-only audit reports notices in Vinext's image inspection dependency and Drizzle Kit's legacy loader. These packages do not ship in the dashboard worker or bot runtime; `npm audit --omit=dev` is clean. Upstream currently offers no compatible patched release for those two tool-only paths.
 
 ## Deployment status
 
-- Dashboard/API: private production deployment succeeded at `https://onyx-helper.quatnumgaming.chatgpt.site`; Discord secrets remain before live guild operation.
-- Bot: production bundle and container definition verified; not connected to Discord or deployed to a persistent host.
+- Dashboard/API: public production deployment is healthy at `https://onyx-helper.quatnumgaming.chatgpt.site`; all runtime secrets except `DISCORD_CLIENT_SECRET` are installed through hosted secret management.
+- Bot: running on the supplied Linux host under one PM2 process with an isolated Node.js 22 runtime, owner-only environment file, globally registered commands, one connected guild, and a healthy scheduler/API link.
 - Database: schema and migration verified locally and against the hosted D1 binding; all 23 application tables are present.
+- GitHub: local history is committed and deployment-ready, but GitHub publication is blocked on this computer until GitHub CLI is installed and authenticated.

@@ -1,3 +1,5 @@
+import { once } from "node:events";
+import { Events } from "discord.js";
 import { OnyxApiClient } from "./api-client";
 import { createOnyxClient } from "./client";
 import { config } from "./config";
@@ -25,7 +27,9 @@ process.on("unhandledRejection", (error) => logger.error({ event: "process.unhan
 process.on("uncaughtException", (error) => logger.fatal({ event: "process.uncaught_exception", error }));
 
 try {
+  const ready = once(client, Events.ClientReady);
   await client.login(config.DISCORD_TOKEN);
+  if (!client.isReady()) await ready;
   if (!client.isReady()) throw new Error("Discord client did not reach the ready state.");
   stopScheduler = startScheduler(client, api);
 } catch (error) {
