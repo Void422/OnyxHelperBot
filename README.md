@@ -1,5 +1,7 @@
 # Onyx
 
+[Live dashboard](https://onyx-helper.quatnumgaming.chatgpt.site) · [GitHub Pages mirror](https://void422.github.io/OnyxHelperBot/) · [Project status](docs/PROJECT_STATUS.md)
+
 Onyx is a multi-server Discord management platform: a Discord bot, a guild-scoped web dashboard, a durable API, and an external moderation appeal flow. It is built for real community operations rather than command-count demos.
 
 The current product includes:
