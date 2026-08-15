@@ -8,11 +8,11 @@ The current product includes:
 
 - Discord OAuth2 sign-in and live Manage Server authorization
 - server selector with least-privilege bot installation links
-- 51 top-level slash commands with 77 configurable command actions across moderation, administration, community, and utilities
+- 51 top-level slash commands with 78 configurable command actions across moderation, administration, community, and utilities
 - moderation cases, bans, kicks, softbans, warnings, timeouts, history, staff notes, purges, locks, roles, nicknames, and slowmode
 - persistent temporary-action recovery after bot restarts
 - configurable warning escalation
-- durable giveaways with editing, pause/resume, rerolls, server-side eligibility, and weighted winner selection
+- event-style giveaways with role and level gates, boosted entries, rerolls, winner roles, and timed rewards
 - private tickets with panels, claims, participants, close/reopen, routed logs, and transcript export
 - persistent reminders, suggestions with staff decisions, welcome/goodbye messages, delayed autoroles, and starboard promotion
 - XP anti-spam, rank and leaderboard views, staff adjustments, exclusions, announcements, and level-role rewards

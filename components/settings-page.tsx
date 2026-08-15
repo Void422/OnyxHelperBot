@@ -7,7 +7,7 @@ import { useGuildSettings } from "./use-guild-settings";
 
 const moduleCopy: Record<GuildModule, string> = {
   moderation: "Cases, warnings, timeouts, bans, notes, and history",
-  logging: "Routed Discord events and durable dashboard history",
+  logging: "Discord activity routes and dashboard history",
   automod: "Nine configurable filters with escalating actions",
   appeals: "Public submissions and staff decisions",
   giveaways: "Weighted entries, rerolls, pause, and scheduled endings",

@@ -1,6 +1,6 @@
-import { and, eq } from "drizzle-orm";
+import { and, count, eq } from "drizzle-orm";
 import { getDb } from "@/db";
-import { giveawayEntries, giveaways, levelProfiles } from "@/db/schema";
+import { giveawayEntries, giveaways, guildSettings, levelProfiles } from "@/db/schema";
 import { requireServiceToken } from "@/lib/server/auth";
 import { ApiError, apiFailure, json, readJson } from "@/lib/server/http";
 import { levelFromXp } from "@/packages/core/src/leveling";
@@ -40,21 +40,22 @@ export async function POST(request: Request, context: Context) {
     if (requirements.minimumMembershipAgeDays && Date.now() - parsed.data.joinedAt.getTime() < requirements.minimumMembershipAgeDays * days) {
       throw new ApiError(403, "You have not been in the server long enough for this giveaway.", "giveaway_membership_age");
     }
-    const [profile] = await getDb()
-      .select()
-      .from(levelProfiles)
-      .where(and(eq(levelProfiles.guildId, giveaway.guildId), eq(levelProfiles.userId, parsed.data.userId)))
-      .limit(1);
-    if ((requirements.minimumXp ?? 0) > (profile?.xp ?? 0) || (requirements.minimumLevel ?? 0) > levelFromXp(profile?.xp ?? 0)) {
+    const database = getDb();
+    const [[profile], [settings]] = await Promise.all([
+      database.select().from(levelProfiles).where(and(eq(levelProfiles.guildId, giveaway.guildId), eq(levelProfiles.userId, parsed.data.userId))).limit(1),
+      database.select({ settings: guildSettings.settings }).from(guildSettings).where(eq(guildSettings.guildId, giveaway.guildId)).limit(1),
+    ]);
+    if ((requirements.minimumXp ?? 0) > (profile?.xp ?? 0) || (requirements.minimumLevel ?? 0) > levelFromXp(profile?.xp ?? 0, settings?.settings.xp?.curve ?? "standard")) {
       throw new ApiError(403, "You have not reached the activity requirement for this giveaway.", "giveaway_activity_required");
     }
     let weight = 1;
     for (const roleId of parsed.data.roleIds) weight += requirements.roleBonusEntries?.[roleId] ?? 0;
-    await getDb()
+    await database
       .insert(giveawayEntries)
       .values({ giveawayId, userId: parsed.data.userId, weight })
       .onConflictDoUpdate({ target: [giveawayEntries.giveawayId, giveawayEntries.userId], set: { weight, eligible: true, ineligibleReason: null } });
-    return json({ entered: true, entries: weight });
+    const [total] = await database.select({ value: count() }).from(giveawayEntries).where(and(eq(giveawayEntries.giveawayId, giveawayId), eq(giveawayEntries.eligible, true)));
+    return json({ entered: true, entries: weight, totalEntries: total.value, prize: giveaway.prize, endsAt: giveaway.endsAt, requirements });
   } catch (error) {
     return apiFailure(error);
   }

@@ -72,6 +72,21 @@ export const settingsUpdateSchema = z.object({
         ignoredChannelIds: z.array(snowflake).max(100).optional(),
       })
       .optional(),
+    giveaways: z
+      .object({
+        requiredRoleId: snowflake.optional(),
+        blockedRoleId: snowflake.optional(),
+        minimumLevel: z.number().int().min(0).max(1_000).optional(),
+        minimumAccountAgeDays: z.number().int().min(0).max(3_650).optional(),
+        minimumMembershipAgeDays: z.number().int().min(0).max(3_650).optional(),
+        bonusRoleId: snowflake.optional(),
+        bonusEntries: z.number().int().min(1).max(20).optional(),
+        winnerRoleId: snowflake.optional(),
+        winnerRoleDurationHours: z.number().int().min(0).max(8_760).optional(),
+        accentColor: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Use a six-digit hex color.").optional(),
+        entryButtonLabel: z.string().min(1).max(80).optional(),
+      })
+      .optional(),
     messages: z
       .object({
         welcome: messageTemplateSchema.optional(),
@@ -101,6 +116,7 @@ export const settingsUpdateSchema = z.object({
       .optional(),
     xp: z
       .object({
+        curve: z.enum(["standard", "grind", "legendary"]).optional(),
         cooldownSeconds: z.number().int().min(15).max(600).optional(),
         minimumMessageLength: z.number().int().min(3).max(200).optional(),
         minAward: z.number().int().min(1).max(100).optional(),
@@ -152,6 +168,10 @@ export const giveawayCreateSchema = z.object({
       minimumLevel: z.number().int().min(0).max(1_000).optional(),
       minimumXp: z.number().int().min(0).max(2_000_000_000).optional(),
       roleBonusEntries: z.record(snowflake, z.number().int().min(1).max(20)).optional(),
+      winnerRoleId: snowflake.optional(),
+      winnerRoleDurationMs: z.number().int().min(0).max(365 * 86_400_000).optional(),
+      accentColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+      entryButtonLabel: z.string().min(1).max(80).optional(),
     })
     .default({}),
 });

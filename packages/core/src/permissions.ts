@@ -5,6 +5,7 @@ export const DiscordPermission = {
   ManageChannels: 1n << 4n,
   ManageGuild: 1n << 5n,
   ManageMessages: 1n << 13n,
+  ManageRoles: 1n << 28n,
   ModerateMembers: 1n << 40n,
 } as const;
 

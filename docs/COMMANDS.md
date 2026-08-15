@@ -1,6 +1,6 @@
 # Command catalog
 
-Onyx currently registers 51 top-level slash commands containing 77 independently configurable command actions. The dashboard Command Center is generated from the same catalog the bot uses for enable/disable and cooldown overrides, so it does not advertise placeholder commands.
+Onyx currently registers 51 top-level slash commands containing 78 independently configurable command actions. The dashboard Command Center is generated from the same catalog the bot uses for enable/disable and cooldown overrides, so it does not advertise placeholder commands.
 
 ## Moderation
 
@@ -22,7 +22,7 @@ Entries, requirements, remaining time, and winners are stored server-side. Sched
 
 ## Levels
 
-`/rank`, `/leaderboard`, `/levelroles`, `/xp get`, `/xp add`, `/xp remove`, `/xp set`
+`/rank`, `/leaderboard`, `/levelroles list`, `/levelroles setup`, `/xp get`, `/xp add`, `/xp remove`, `/xp set`
 
 XP uses anti-spam policy, channel/role exclusions, persistent profiles, level rewards, and audited staff adjustments.
 

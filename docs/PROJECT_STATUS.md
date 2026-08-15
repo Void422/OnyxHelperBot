@@ -7,7 +7,7 @@ Last updated: 2026-08-15
 - Sites-compatible Vinext dashboard/API and a separately deployable Discord.js gateway process.
 - A 24-table indexed D1 schema covering identity, guild configuration, moderation, appeals, giveaways, levels, tickets, reminders, suggestions, starboard state, audit events, and durable rate limits/jobs.
 - Discord OAuth2 login, opaque HttpOnly sessions, encrypted OAuth tokens, live Manage Server/Administrator checks, CSRF and same-origin mutation protection, and authenticated bot-to-API routes.
-- 51 top-level slash commands with 77 independently configurable actions. The dashboard catalog and bot registry were compared directly: zero missing handlers and zero duplicates.
+- 51 top-level slash commands with 78 independently configurable actions. The dashboard catalog and bot registry were compared directly: zero missing handlers and zero duplicates.
 - Complete moderation records for cases, warnings, reason corrections, member history, private staff notes, temporary actions, nickname actions, and warning escalation.
 - Durable giveaway creation, listing, inspection, editing, pause/resume, manual ending, scheduled ending, rerolls, weighted entries, and customizable winner messages.
 - Durable ticket records, private channel creation, panels, claims, close/reopen, participants, rename, transcript export, staff access, and routed ticket logs.

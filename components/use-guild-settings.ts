@@ -17,7 +17,7 @@ export interface GuildSettingsRecord {
 }
 
 interface SettingsResponse { guild: { id: string; name: string }; settings: GuildSettingsRecord }
-export interface GuildResources { channels: Array<{ id: string; name: string; type: number; position?: number }>; roles: Array<{ id: string; name: string; position: number }> }
+export interface GuildResources { channels: Array<{ id: string; name: string; type: number; position?: number }>; roles: Array<{ id: string; name: string; color?: number; position: number }> }
 
 function clone<T>(value: T): T { return JSON.parse(JSON.stringify(value)) as T; }
 

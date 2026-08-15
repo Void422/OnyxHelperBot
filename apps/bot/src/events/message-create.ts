@@ -200,7 +200,7 @@ export async function handleMessage(message: Message, api: OnyxApiClient) {
     );
     if (!decision.award) return;
     const result = await api.awardXp({ guildId: message.guildId, userId: message.author.id, award: decision.award, occurredAt: message.createdAt });
-    const previousLevel = levelFromXp(result.profile.xp - decision.award);
+    const previousLevel = levelFromXp(result.profile.xp - decision.award, config.settings?.settings.xp?.curve ?? "standard");
     await applyLevelRole(message, message.member, config, previousLevel, result.level);
   } catch (error) {
     logger.warn({ event: "message.handler_failed", guildId: message.guildId, messageId: message.id, error });
