@@ -1,0 +1,64 @@
+{
+  "name": "onyx-management-platform",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev": "vinext dev",
+    "dev:bot": "tsx watch apps/bot/src/index.ts",
+    "build": "vinext build",
+    "build:bot": "tsup apps/bot/src/index.ts apps/bot/src/deploy-commands.ts --format esm --target node22 --out-dir apps/bot/dist --clean --sourcemap",
+    "start": "vinext start",
+    "start:bot": "node apps/bot/dist/index.js",
+    "commands:deploy": "tsx apps/bot/src/deploy-commands.ts",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "test:site": "npm run build && node --test tests/rendered-html.test.mjs",
+    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next --ignore-pattern .vinext",
+    "typecheck": "tsc --noEmit && tsc -p apps/bot/tsconfig.json --noEmit",
+    "check": "npm run lint && npm run typecheck && npm run test && npm run build && npm run build:bot",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:local": "wrangler d1 migrations apply DB --local"
+  },
+  "dependencies": {
+    "discord.js": "^14.27.0",
+    "drizzle-orm": "0.45.2",
+    "lucide-react": "^0.542.0",
+    "pino": "^9.9.5",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "zod": "^4.1.5"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.52.1",
+    "@cloudflare/workers-types": "^5.20260815.1",
+    "@eslint/js": "9.39.4",
+    "@next/eslint-plugin-next": "16.2.6",
+    "@tailwindcss/postcss": "4.2.1",
+    "@types/node": "22.19.19",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.0.2",
+    "@vitejs/plugin-rsc": "0.5.26",
+    "drizzle-kit": "0.31.10",
+    "eslint": "9.39.4",
+    "eslint-plugin-jsx-a11y": "6.10.2",
+    "eslint-plugin-react": "7.37.5",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "16.4.0",
+    "react-server-dom-webpack": "^19.2.8",
+    "tailwindcss": "4.2.1",
+    "tsup": "^8.5.0",
+    "tsx": "^4.20.5",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.59.3",
+    "vinext": "^1.0.0-beta.5",
+    "vite": "^8.2.1",
+    "wrangler": "^4.123.0"
+  },
+  "type": "module",
+  "overrides": {
+    "ws": "8.21.0"
+  }
+}

@@ -1,0 +1,8 @@
+"use client";
+
+import { FileClock } from "lucide-react";
+import { DashboardShell } from "./dashboard-shell";
+import { formatApiDate, useApi } from "./use-api";
+
+interface AuditEvent { id: string; action: string; actorUserId: string; source: string; targetType: string; targetId: string | null; createdAt: string }
+export function AuditPage({ guildId }: { guildId: string }) { const settings = useApi<{ guild: { name: string } }>(`/api/guilds/${guildId}/settings`); const result = useApi<{ events: AuditEvent[] }>(`/api/guilds/${guildId}/audit`); return <DashboardShell guildId={guildId} guildName={settings.data?.guild.name} active="audit"><div className="page-heading"><div><h1>Audit log</h1><p>Application-level changes made from the dashboard, bot, and background workers.</p></div></div>{result.error && <div className="error-banner">{result.error}</div>}<section className="panel">{result.loading ? <div className="panel-body loading-stack"><div className="skeleton" /><div className="skeleton" /></div> : result.data?.events.length ? <div className="table-wrap"><table className="data-table"><thead><tr><th>Action</th><th>Actor</th><th>Source</th><th>Target</th><th>Date</th></tr></thead><tbody>{result.data.events.map((item) => <tr key={item.id}><td>{item.action.replace(/[._]/g," ")}</td><td><code>{item.actorUserId}</code></td><td><span className="badge">{item.source}</span></td><td>{item.targetType}{item.targetId && <div><code>{item.targetId}</code></div>}</td><td>{formatApiDate(item.createdAt)}</td></tr>)}</tbody></table></div> : <div className="empty-state"><FileClock size={22} /><strong>No audit events yet</strong><span>Saved settings and workflow decisions will appear here.</span></div>}</section></DashboardShell>; }

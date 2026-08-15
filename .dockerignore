@@ -1,0 +1,12 @@
+.git
+.env*
+env.txt
+node_modules
+.next
+.vinext
+.wrangler
+dist
+logs
+coverage
+backups
+transcripts
