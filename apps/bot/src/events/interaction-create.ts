@@ -1,4 +1,4 @@
-import { MessageFlags, type Interaction } from "discord.js";
+import { EmbedBuilder, MessageFlags, type Interaction } from "discord.js";
 import { commandMap } from "../commands";
 import { handleHelpSelect } from "../commands/utility";
 import { handleTicketButton } from "../commands/tickets";
@@ -32,7 +32,24 @@ export async function handleInteraction(interaction: Interaction, api: OnyxApiCl
         accountCreatedAt: interaction.user.createdAt,
         joinedAt: member.joinedAt ?? new Date(),
       });
-      await interaction.editReply(result.entries > 1 ? `You're entered with ${result.entries} entries.` : "You're entered. Good luck.");
+      const drawTime = Math.floor(new Date(result.endsAt).getTime() / 1_000);
+      await interaction.editReply({ embeds: [new EmbedBuilder()
+        .setColor(0xe0aa4f)
+        .setAuthor({ name: "TICKET LOCKED IN" })
+        .setTitle(`🎟️ You're in for ${result.prize}`)
+        .setDescription(result.entries > 1 ? `Your roles boosted you to **${result.entries} tickets**. Every ticket is another chance when the draw lands.` : "You have **1 ticket** in the draw. Good luck.")
+        .addFields(
+          { name: "Your tickets", value: String(result.entries), inline: true },
+          { name: "Entrants", value: result.totalEntries.toLocaleString(), inline: true },
+          { name: "Reveal", value: `<t:${drawTime}:R>`, inline: true },
+        )
+        .setFooter({ text: "You can tap the button again anytime to check your ticket count" })] });
+      const sourceEmbed = interaction.message.embeds[0];
+      if (sourceEmbed) {
+        const data = sourceEmbed.toJSON();
+        const fields = (data.fields ?? []).map((field) => field.name === "Entrants" ? { ...field, value: result.totalEntries.toLocaleString() } : field);
+        await interaction.message.edit({ embeds: [EmbedBuilder.from(data).setFields(fields)] }).catch(() => undefined);
+      }
       return;
     }
 

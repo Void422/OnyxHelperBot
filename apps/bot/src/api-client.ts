@@ -1,5 +1,6 @@
 import type { Guild } from "discord.js";
 import type { GuildSettingsData, GuildModule, GiveawayRequirements } from "@/packages/core/src/domain";
+import type { LevelCurve } from "@/packages/core/src/rank-ladders";
 import { config } from "./config";
 import { PublicError } from "./errors";
 
@@ -142,6 +143,10 @@ export class OnyxApiClient {
     return this.request<{ leaderboard: Array<{ userId: string; xp: number; messageCount: number; weeklyXp: number; rank: number; level: number }> }>(`/api/internal/xp/leaderboard?${new URLSearchParams({ guildId })}`);
   }
 
+  configureLevelRoles(input: { guildId: string; actorUserId: string; curve: LevelCurve; rewards: Array<{ level: number; roleId: string; stack: boolean }> }) {
+    return this.request<{ rewards: BotGuildConfig["levelRoles"]; curve: LevelCurve }>("/api/internal/level-roles", { method: "PUT", body: JSON.stringify(input) });
+  }
+
   createGiveaway(input: {
     guildId: string;
     channelId: string;
@@ -172,11 +177,15 @@ export class OnyxApiClient {
   }
 
   enterGiveaway(giveawayId: string, input: { userId: string; roleIds: string[]; accountCreatedAt: Date; joinedAt: Date }) {
-    return this.request<{ entered: true; entries: number }>(`/api/internal/giveaways/${giveawayId}/enter`, { method: "POST", body: JSON.stringify(input) });
+    return this.request<{ entered: true; entries: number; totalEntries: number; prize: string; endsAt: string; requirements: GiveawayRequirements }>(`/api/internal/giveaways/${giveawayId}/enter`, { method: "POST", body: JSON.stringify(input) });
   }
 
   scheduleAutoroles(input: { guildId: string; userId: string; roleIds: string[]; dueAt: Date }) {
     return this.request<{ ok: true }>("/api/internal/jobs/autoroles", { method: "POST", body: JSON.stringify(input) });
+  }
+
+  scheduleWinnerRoleRemoval(input: { guildId: string; userId: string; roleId: string; dueAt: Date }) {
+    return this.request<{ ok: true }>("/api/internal/jobs/role-rewards", { method: "POST", body: JSON.stringify(input) });
   }
 
   createTicket(input: { guildId: string; channelId: string; ownerUserId: string; department?: string }) {
@@ -289,6 +298,7 @@ export interface EndedGiveaway {
   prize: string;
   winnerUserIds: string[];
   eligibleEntryCount: number;
+  requirements: GiveawayRequirements;
 }
 
 export interface GiveawayRecord {
@@ -305,6 +315,7 @@ export interface GiveawayRecord {
   winnerUserIds: string[];
   eligibleEntryCount: number | null;
   rerollCount: number;
+  requirements: GiveawayRequirements;
 }
 
 export interface TicketRecord {

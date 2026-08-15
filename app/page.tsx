@@ -3,10 +3,10 @@ import Link from "next/link";
 import { OnyxMark } from "@/components/onyx-mark";
 
 const modules = [
-  { icon: Gavel, title: "Moderation with memory", copy: "Cases, warnings, evidence, and temporary actions stay organized and survive every restart." },
+  { icon: Gavel, title: "Moderation with memory", copy: "Cases, warnings, evidence, and timed actions stay organized for the whole staff team." },
   { icon: ShieldCheck, title: "Safety you can tune", copy: "Automod rules use measured thresholds, role and channel exemptions, and accountable actions." },
-  { icon: Gift, title: "Fair giveaways", copy: "Eligibility is checked on the server. Entries are durable, weighted transparently, and rerolls stay accountable." },
-  { icon: Gauge, title: "Participation, not spam", copy: "XP cooldowns, duplicate detection, and low-signal filtering reward real conversation." },
+  { icon: Gift, title: "Giveaways people remember", copy: "Role gates, bonus tickets, winner roles, timed rewards, and a reveal that feels like an event." },
+  { icon: Gauge, title: "Ranks worth grinding for", copy: "Build a seven-role ladder with distinct colors, escalating perks, and a finish line members can flex." },
   { icon: TicketCheck, title: "Support that stays tidy", copy: "Ticket ownership, staff access, claims, closure, and transcripts follow one clear workflow." },
   { icon: Layers3, title: "One control plane", copy: "Guild settings, appeals, logs, modules, and audit history live in a dashboard that controls the bot." },
 ];
@@ -32,12 +32,12 @@ export default function Home() {
             <div className="eyebrow">Discord management, considered</div>
             <h1>Your server, under control.</h1>
             <p className="hero-copy">Onyx gives serious Discord teams real control over commands, moderation, tickets, automod, levels, messages, logs, and community programs—without the usual wall of toggles.</p>
-            <div className="hero-proof"><span><strong>77</strong> command actions</span><span><strong>9</strong> automod rules</span><span><strong>11</strong> working modules</span></div>
+            <div className="hero-proof"><span><strong>78</strong> command actions</span><span><strong>9</strong> automod rules</span><span><strong>11</strong> working modules</span></div>
             <div className="hero-actions">
               <a className="button primary" href="/api/auth/discord/login">Continue with Discord <ArrowRight size={16} /></a>
               <a className="button" href="/appeal">Submit an appeal</a>
             </div>
-            <div className="quiet-note">Discord permissions remain the authority. Onyx never asks for Administrator.</div>
+            <div className="quiet-note">No Administrator permission required.</div>
           </div>
 
           <div className="product-window" aria-label="Onyx dashboard preview">
@@ -49,7 +49,7 @@ export default function Home() {
               </aside>
               <div className="window-main">
                 <div className="window-heading">Every command, on your terms.</div>
-                <div className="window-sub">Per-action controls · real handlers · guild scoped</div>
+                <div className="window-sub">Access · cooldowns · rank rewards</div>
                 <div className="module-list">
                   {[
                     [Gavel, '/ban', 'Moderation · Ban Members · 3s cooldown'],
@@ -72,19 +72,19 @@ export default function Home() {
 
       <section className="section" id="platform">
         <div className="container">
-          <div className="section-heading"><div className="eyebrow">A complete control plane</div><h2>Serious tools, with the noise edited out.</h2><p>Every module is designed around the work staff actually do. Settings save to durable storage, Discord actions are checked at execution time, and empty states tell the truth.</p></div>
+          <div className="section-heading"><div className="eyebrow">Everything in its place</div><h2>Serious tools, with the noise edited out.</h2><p>Set up moderation, member ranks, ticket flows, community events, messages, and logs without digging through a wall of toggles.</p></div>
           <div className="feature-grid">{modules.map(({ icon: Icon, title, copy }) => <article className="feature-card" key={title}><Icon size={22} /><h3>{title}</h3><p>{copy}</p></article>)}</div>
         </div>
       </section>
 
       <section className="section" id="approach">
         <div className="container principles">
-          <div className="section-heading"><div className="eyebrow">Built to stay running</div><h2>Restarting the bot should be boring.</h2><p>Temporary bans, timeouts, giveaway endings, and reminders are persisted and leased before processing. A process restart pauses the work; it does not erase it.</p><Link className="button" href="/dashboard"><Bot size={15} /> Manage your server</Link></div>
+          <div className="section-heading"><div className="eyebrow">Set it and move on</div><h2>Your server keeps its rhythm.</h2><p>Timed moderation, giveaway reveals, reminders, and role rewards keep their place even when Onyx restarts.</p><Link className="button" href="/dashboard"><Bot size={15} /> Manage your server</Link></div>
           <div className="principle-list">
-            <div className="principle"><strong>Backend authority</strong><span>Every sensitive request rechecks identity, guild permission, validation, and CSRF server-side.</span></div>
-            <div className="principle"><strong>Scoped by design</strong><span>Every record carries its guild boundary. Navigating to another guild ID does not grant access.</span></div>
-            <div className="principle"><strong>Useful audit history</strong><span>Configuration and workflow changes record the actor, target, before and after state, and time.</span></div>
-            <div className="principle"><strong>Deliberate permissions</strong><span>Onyx asks only for the Discord permissions its implemented modules need.</span></div>
+            <div className="principle"><strong>Your server stays yours</strong><span>Only members with the right Discord access can change its setup.</span></div>
+            <div className="principle"><strong>One server at a time</strong><span>Every setting, case, rank, and giveaway belongs to the community that created it.</span></div>
+            <div className="principle"><strong>A trail staff can use</strong><span>See who changed what, what it affected, and when it happened.</span></div>
+            <div className="principle"><strong>Only the permissions it needs</strong><span>Onyx works without asking for the Administrator switch.</span></div>
           </div>
         </div>
       </section>

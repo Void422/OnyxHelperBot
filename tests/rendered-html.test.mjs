@@ -28,6 +28,6 @@ test("ships product metadata and a bespoke social card", async () => {
   const response = await render();
   const html = await response.text();
   assert.match(html, /Onyx — Discord management, without the clutter/);
-  assert.match(html, /http:\/\/localhost\/og\.png/);
+  assert.match(html, /http:\/\/localhost\/og-v2\.png/);
   assert.match(html, /summary_large_image/);
 });

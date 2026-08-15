@@ -12,6 +12,7 @@ test("Manage Guild and Administrator authorize dashboard access", () => {
 test("Administrator satisfies specific permission checks", () => {
   assert.equal(hasDiscordPermission(DiscordPermission.Administrator, DiscordPermission.BanMembers), true);
   assert.equal(hasDiscordPermission(DiscordPermission.KickMembers, DiscordPermission.BanMembers), false);
+  assert.equal(hasDiscordPermission(DiscordPermission.ManageRoles, DiscordPermission.ManageRoles), true);
 });
 
 test("moderation hierarchy blocks owners, peers, and targets above the bot", () => {

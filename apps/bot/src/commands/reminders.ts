@@ -6,7 +6,7 @@ import type { OnyxCommand } from "./types";
 const remind: OnyxCommand = {
   data: new SlashCommandBuilder()
     .setName("remind")
-    .setDescription("Create and manage reminders that survive bot restarts.")
+    .setDescription("Set personal reminders for later.")
     .addSubcommand((subcommand) => subcommand.setName("create").setDescription("Ask Onyx to remind you later.")
       .addStringOption((option) => option.setName("when").setDescription("How long from now, such as 20m, 3h, or 2d").setRequired(true))
       .addStringOption((option) => option.setName("message").setDescription("What to remind you about").setRequired(true).setMaxLength(1_500))

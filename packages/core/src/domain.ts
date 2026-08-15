@@ -72,6 +72,20 @@ export interface StarboardSettings {
   ignoredChannelIds?: string[];
 }
 
+export interface GiveawaySettings {
+  requiredRoleId?: string;
+  blockedRoleId?: string;
+  minimumLevel?: number;
+  minimumAccountAgeDays?: number;
+  minimumMembershipAgeDays?: number;
+  bonusRoleId?: string;
+  bonusEntries?: number;
+  winnerRoleId?: string;
+  winnerRoleDurationHours?: number;
+  accentColor?: string;
+  entryButtonLabel?: string;
+}
+
 export interface GuildSettingsData {
   commandPrefix?: string;
   moderationLogChannelId?: string;
@@ -86,6 +100,7 @@ export interface GuildSettingsData {
   tickets?: TicketSettings;
   suggestions?: SuggestionSettings;
   starboard?: StarboardSettings;
+  giveaways?: GiveawaySettings;
   messages?: {
     welcome?: MessageTemplate;
     goodbye?: MessageTemplate;
@@ -97,6 +112,7 @@ export interface GuildSettingsData {
   commandOverrides?: Record<string, { enabled?: boolean; cooldownSeconds?: number }>;
   warningThresholds?: WarningThreshold[];
   xp?: {
+    curve?: "standard" | "grind" | "legendary";
     cooldownSeconds?: number;
     minimumMessageLength?: number;
     minAward?: number;
@@ -120,6 +136,10 @@ export interface GiveawayRequirements {
   minimumLevel?: number;
   minimumXp?: number;
   roleBonusEntries?: Record<string, number>;
+  winnerRoleId?: string;
+  winnerRoleDurationMs?: number;
+  accentColor?: string;
+  entryButtonLabel?: string;
 }
 
 export interface AutomodConditions {

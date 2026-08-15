@@ -1,6 +1,6 @@
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { getDb } from "@/db";
-import { levelProfiles } from "@/db/schema";
+import { guildSettings, levelProfiles } from "@/db/schema";
 import { requireServiceToken } from "@/lib/server/auth";
 import { ApiError, apiFailure, json, readJson } from "@/lib/server/http";
 import { levelFromXp } from "@/packages/core/src/leveling";
@@ -38,7 +38,8 @@ export async function POST(request: Request) {
       .from(levelProfiles)
       .where(sql`${levelProfiles.guildId} = ${parsed.data.guildId} AND ${levelProfiles.userId} = ${parsed.data.userId}`)
       .limit(1);
-    return json({ profile, level: levelFromXp(profile.xp) });
+    const [settings] = await database.select({ settings: guildSettings.settings }).from(guildSettings).where(eq(guildSettings.guildId, parsed.data.guildId)).limit(1);
+    return json({ profile, level: levelFromXp(profile.xp, settings?.settings.xp?.curve ?? "standard") });
   } catch (error) {
     return apiFailure(error);
   }

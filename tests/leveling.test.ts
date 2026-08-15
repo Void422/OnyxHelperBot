@@ -17,3 +17,12 @@ test("progress reports the correct current-level interval", () => {
   assert.equal(progress.level, 7);
   assert.ok(progress.percent >= 49 && progress.percent <= 50);
 });
+
+test("grind curves preserve thresholds while demanding more XP", () => {
+  for (const curve of ["grind", "legendary"] as const) {
+    for (let level = 1; level < 100; level += 1) {
+      assert.ok(xpForLevel(level, curve) > xpForLevel(level));
+      assert.equal(levelFromXp(xpForLevel(level, curve), curve), level);
+    }
+  }
+});

@@ -98,7 +98,7 @@ const categoryDescriptions: Record<string, string> = {
   Moderation: "Cases, warnings, timeouts, bans, and channel controls",
   Administration: "Roles, announcements, channels, and staff operations",
   Community: "Member-facing community tools",
-  Giveaways: "Durable giveaways and fair winner selection",
+  Giveaways: "Role-gated drops, bonus tickets, and winner rewards",
   Levels: "XP progress, leaderboards, and staff adjustments",
   Tickets: "Private support channels and staff workflows",
   Utilities: "Quick tools for everyday Discord work",

@@ -67,7 +67,7 @@ export const commandCatalogEntries: CommandCatalogEntry[] = [
   ...entries("Administration", "Manage Messages", undefined, [["say", "Post a plain message through Onyx with mentions disabled.", 3]]),
   ...entries("Administration", "Manage Channels", undefined, [["topic", "Update or clear a text channel topic."], ["thread", "Start a public discussion thread."]]),
   ...entries("Giveaways", "Manage Server", "giveaways", [
-    ["giveaway.create", "Create a durable giveaway in a chosen channel.", 3],
+    ["giveaway.create", "Launch a role-gated drop with boosted tickets and winner rewards.", 3],
     ["giveaway.list", "List recent giveaways and their IDs.", 3],
     ["giveaway.info", "Inspect entrants, state, and timing for a giveaway.", 3],
     ["giveaway.end", "End a running giveaway and draw winners now.", 3],
@@ -76,7 +76,8 @@ export const commandCatalogEntries: CommandCatalogEntry[] = [
     ["giveaway.resume", "Resume a paused giveaway.", 3],
     ["giveaway.edit", "Update the prize, details, timing, or winner count.", 3],
   ]),
-  ...entries("Levels", "Everyone", "levels", [["rank", "View XP progress, level, and server rank.", 3], ["leaderboard", "View the ten highest XP profiles.", 10], ["levelroles", "Review configured level role rewards."]]),
+  ...entries("Levels", "Everyone", "levels", [["rank", "View XP progress, rank title, and the next unlock.", 3], ["leaderboard", "View the ten highest-ranked members.", 10], ["levelroles.list", "Review every rank and role unlock."]]),
+  ...entries("Levels", "Manage Roles", "levels", [["levelroles.setup", "Create a complete colored rank ladder with unlockable perks."]]),
   ...entries("Levels", "Manage Server", "levels", [
     ["xp.get", "Review a member's exact XP profile.", 2],
     ["xp.add", "Add XP with an auditable reason.", 2],

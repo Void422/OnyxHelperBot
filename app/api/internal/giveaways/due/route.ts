@@ -5,6 +5,7 @@ import { recordAudit } from "@/lib/server/audit";
 import { requireServiceToken } from "@/lib/server/auth";
 import { apiFailure, json } from "@/lib/server/http";
 import { selectGiveawayWinners } from "@/packages/core/src/giveaway";
+import type { GiveawayRequirements } from "@/packages/core/src/domain";
 
 function secureRandom() {
   const value = new Uint32Array(1);
@@ -30,6 +31,7 @@ export async function POST(request: Request) {
       prize: string;
       winnerUserIds: string[];
       eligibleEntryCount: number;
+      requirements: GiveawayRequirements;
     }> = [];
 
     for (const giveaway of due) {
@@ -65,6 +67,7 @@ export async function POST(request: Request) {
         prize: giveaway.prize,
         winnerUserIds,
         eligibleEntryCount: entries.length,
+        requirements: giveaway.requirements,
       });
     }
     return json({ giveaways: ended });

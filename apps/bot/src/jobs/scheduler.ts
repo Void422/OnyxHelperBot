@@ -1,8 +1,8 @@
 import { EmbedBuilder, type Client } from "discord.js";
 import type { OnyxApiClient, TemporaryJob } from "../api-client";
 import { sendGuildLog } from "../events/logging";
+import { grantWinnerRoles, winnerAnnouncement } from "../giveaway-events";
 import { logger } from "../logger";
-import { configuredMessage } from "../messages";
 
 function payload(job: TemporaryJob) {
   if (typeof job.payload !== "string") return job.payload;
@@ -51,13 +51,8 @@ async function announceGiveaways(client: Client<true>, api: OnyxApiClient) {
           await original.edit({ embeds: [embed], components: [] });
         }
       }
-      const winners = giveaway.winnerUserIds.map((id) => `<@${id}>`);
-      const config = await api.getGuildConfig(giveaway.guildId, true);
-      const template = config.settings?.settings.messages?.giveawayWinner;
-      const message = template && winners.length
-        ? configuredMessage(template, { user: giveaway.winnerUserIds[0], mention: winners.join(", "), username: winners.join(", "), server: guild.name, prize: giveaway.prize })
-        : { content: winners.length ? `Giveaway ended — ${winners.join(", ")} ${winners.length === 1 ? "wins" : "win"} **${giveaway.prize}**.` : `Giveaway ended — there were no eligible entries for **${giveaway.prize}**.` };
-      await channel.send({ ...message, allowedMentions: { users: giveaway.winnerUserIds, parse: [] } });
+      await grantWinnerRoles(guild, api, giveaway);
+      await channel.send(await winnerAnnouncement(guild, api, giveaway));
       await sendGuildLog(guild, api, "giveaways", { embeds: [new EmbedBuilder().setColor(0xe0aa4f).setTitle("Giveaway ended automatically").setDescription(`**${giveaway.prize}** ended with ${giveaway.eligibleEntryCount} eligible entr${giveaway.eligibleEntryCount === 1 ? "y" : "ies"}.`).setTimestamp()] });
     } catch (error) {
       logger.error({ event: "giveaway.announcement_failed", giveawayId: giveaway.id, error });
