@@ -26,3 +26,15 @@ test("grind curves preserve thresholds while demanding more XP", () => {
     }
   }
 });
+
+test("custom curves control the first level and exact per-level growth", () => {
+  const curve = { curve: "custom", baseXp: 75, growthXp: 40 } as const;
+  assert.equal(xpForLevel(1, curve), 75);
+  assert.equal(xpForLevel(2, curve) - xpForLevel(1, curve), 115);
+  assert.equal(xpForLevel(25, curve) - xpForLevel(24, curve), 1_035);
+  assert.equal(levelFromXp(xpForLevel(25, curve), curve), 25);
+});
+
+test("preset curves ignore stored custom tuning", () => {
+  assert.equal(xpForLevel(10, { curve: "grind", baseXp: 1, growthXp: 0 }), xpForLevel(10, "grind"));
+});

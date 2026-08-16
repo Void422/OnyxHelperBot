@@ -45,7 +45,7 @@ export async function POST(request: Request, context: Context) {
       database.select().from(levelProfiles).where(and(eq(levelProfiles.guildId, giveaway.guildId), eq(levelProfiles.userId, parsed.data.userId))).limit(1),
       database.select({ settings: guildSettings.settings }).from(guildSettings).where(eq(guildSettings.guildId, giveaway.guildId)).limit(1),
     ]);
-    if ((requirements.minimumXp ?? 0) > (profile?.xp ?? 0) || (requirements.minimumLevel ?? 0) > levelFromXp(profile?.xp ?? 0, settings?.settings.xp?.curve ?? "standard")) {
+    if ((requirements.minimumXp ?? 0) > (profile?.xp ?? 0) || (requirements.minimumLevel ?? 0) > levelFromXp(profile?.xp ?? 0, settings?.settings.xp ?? "standard")) {
       throw new ApiError(403, "You have not reached the activity requirement for this giveaway.", "giveaway_activity_required");
     }
     let weight = 1;

@@ -1,4 +1,5 @@
-import { EmbedBuilder, PermissionFlagsBits, type GuildMember, type Message } from "discord.js";
+import { EmbedBuilder, type GuildMember, type Message } from "discord.js";
+import { isAutomodExempt } from "@/packages/core/src/automod";
 import { levelFromXp } from "@/packages/core/src/leveling";
 import { XpPolicy, type XpPolicyConfig } from "@/packages/core/src/xp-policy";
 import type { BotGuildConfig, OnyxApiClient } from "../api-client";
@@ -26,11 +27,7 @@ function configuredXp(config: BotGuildConfig): XpPolicyConfig {
 }
 
 function isExempt(message: Message<true>, rule: BotGuildConfig["automodRules"][number]) {
-  return (
-    message.member?.permissions.has(PermissionFlagsBits.ManageMessages) ||
-    rule.exemptChannelIds.includes(message.channelId) ||
-    message.member?.roles.cache.some((role) => rule.exemptRoleIds.includes(role.id))
-  );
+  return isAutomodExempt(message.channelId, message.member?.roles.cache.map((role) => role.id) ?? [], rule);
 }
 
 async function applyAutomod(message: Message<true>, config: BotGuildConfig, api: OnyxApiClient) {
@@ -200,7 +197,7 @@ export async function handleMessage(message: Message, api: OnyxApiClient) {
     );
     if (!decision.award) return;
     const result = await api.awardXp({ guildId: message.guildId, userId: message.author.id, award: decision.award, occurredAt: message.createdAt });
-    const previousLevel = levelFromXp(result.profile.xp - decision.award, config.settings?.settings.xp?.curve ?? "standard");
+    const previousLevel = levelFromXp(result.profile.xp - decision.award, config.settings?.settings.xp ?? "standard");
     await applyLevelRole(message, message.member, config, previousLevel, result.level);
   } catch (error) {
     logger.warn({ event: "message.handler_failed", guildId: message.guildId, messageId: message.id, error });

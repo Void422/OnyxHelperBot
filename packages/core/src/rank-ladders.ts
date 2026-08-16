@@ -1,4 +1,4 @@
-export const levelCurves = ["standard", "grind", "legendary"] as const;
+export const levelCurves = ["standard", "grind", "legendary", "custom"] as const;
 export type LevelCurve = (typeof levelCurves)[number];
 
 export const rankPermissionKeys = [

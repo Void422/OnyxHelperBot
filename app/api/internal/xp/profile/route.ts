@@ -31,7 +31,7 @@ export async function GET(request: Request) {
     ]);
     const xp = profile?.xp ?? 0;
     const [higher] = await database.select({ value: count() }).from(levelProfiles).where(and(eq(levelProfiles.guildId, guildId), gt(levelProfiles.xp, xp)));
-    return json({ profile: { xp, messageCount: profile?.messageCount ?? 0, rank: higher.value + 1 }, level: levelFromXp(xp, settings?.settings.xp?.curve ?? "standard") });
+    return json({ profile: { xp, messageCount: profile?.messageCount ?? 0, rank: higher.value + 1 }, level: levelFromXp(xp, settings?.settings.xp ?? "standard") });
   } catch (error) {
     return apiFailure(error);
   }
@@ -63,7 +63,7 @@ export async function PATCH(request: Request) {
       before: { xp: beforeXp },
       after: { xp: nextXp, reason: parsed.data.reason },
     });
-    return json({ profile: { xp: nextXp, messageCount: current?.messageCount ?? 0 }, level: levelFromXp(nextXp, settings?.settings.xp?.curve ?? "standard") });
+    return json({ profile: { xp: nextXp, messageCount: current?.messageCount ?? 0 }, level: levelFromXp(nextXp, settings?.settings.xp ?? "standard") });
   } catch (error) {
     return apiFailure(error);
   }

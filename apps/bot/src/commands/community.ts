@@ -171,7 +171,7 @@ const rank: OnyxCommand = {
     await interaction.deferReply();
     const user = interaction.options.getUser("member") ?? interaction.user;
     const [result, config] = await Promise.all([api.getLevelProfile(interaction.guildId, user.id), api.getGuildConfig(interaction.guildId)]);
-    const progress = levelProgress(result.profile.xp, config.settings?.settings.xp?.curve ?? "standard");
+    const progress = levelProgress(result.profile.xp, config.settings?.settings.xp ?? "standard");
     const rewards = [...config.levelRoles].sort((left, right) => left.level - right.level);
     const currentReward = [...rewards].reverse().find((reward) => reward.level <= progress.level);
     const nextReward = rewards.find((reward) => reward.level > progress.level);

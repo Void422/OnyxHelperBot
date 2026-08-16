@@ -39,7 +39,7 @@ export async function POST(request: Request) {
       .where(sql`${levelProfiles.guildId} = ${parsed.data.guildId} AND ${levelProfiles.userId} = ${parsed.data.userId}`)
       .limit(1);
     const [settings] = await database.select({ settings: guildSettings.settings }).from(guildSettings).where(eq(guildSettings.guildId, parsed.data.guildId)).limit(1);
-    return json({ profile, level: levelFromXp(profile.xp, settings?.settings.xp?.curve ?? "standard") });
+    return json({ profile, level: levelFromXp(profile.xp, settings?.settings.xp ?? "standard") });
   } catch (error) {
     return apiFailure(error);
   }
