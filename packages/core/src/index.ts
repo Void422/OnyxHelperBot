@@ -3,6 +3,7 @@ export * from "./duration";
 export * from "./giveaway";
 export * from "./leveling";
 export * from "./rank-ladders";
+export * from "./role-updates";
 export * from "./permissions";
 export * from "./validation";
 export * from "./xp-policy";

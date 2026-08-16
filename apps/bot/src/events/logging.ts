@@ -1,6 +1,7 @@
 import { EmbedBuilder, type Guild, type GuildBasedChannel, type Message, type MessageCreateOptions, type PartialMessage, type Role, type VoiceState } from "discord.js";
 import type { OnyxApiClient } from "../api-client";
 import { logger } from "../logger";
+import { meaningfulRoleChanges } from "@/packages/core/src/role-updates";
 
 async function logChannel(guildId: string, api: OnyxApiClient, category: string, guild: Message<true>["guild"] | Role["guild"] | GuildBasedChannel["guild"]) {
   const config = await api.getGuildConfig(guildId);
@@ -67,11 +68,20 @@ export async function handleMessageUpdate(before: Message | PartialMessage, afte
   }
 }
 
-export async function handleRoleChange(kind: "created" | "updated" | "deleted", role: Role, api: OnyxApiClient) {
+export async function handleRoleChange(kind: "created" | "updated" | "deleted", role: Role, api: OnyxApiClient, previous?: Role) {
   try {
+    const changes = kind === "updated" && previous ? meaningfulRoleChanges(previous, role) : [];
+    if (kind === "updated" && changes.length === 0) return;
     const channel = await logChannel(role.guild.id, api, "server", role.guild);
     if (!channel) return;
-    await channel.send({ embeds: [new EmbedBuilder().setColor(0x596678).setTitle(`Role ${kind}`).setDescription(`**${role.name}** was ${kind}.`).addFields({ name: "Role ID", value: role.id }).setTimestamp()] });
+    const embed = new EmbedBuilder()
+      .setColor(0x596678)
+      .setTitle(`Role ${kind}`)
+      .setDescription(`**${role.name}** was ${kind}.`)
+      .addFields({ name: "Role ID", value: role.id })
+      .setTimestamp();
+    if (changes.length) embed.addFields({ name: "Changes", value: changes.map((change) => `**${change.label}:** ${change.before} → ${change.after}`).join("\n").slice(0, 1_024) });
+    await channel.send({ embeds: [embed] });
   } catch (error) {
     logger.warn({ event: "log.role_change_failed", guildId: role.guild.id, roleId: role.id, error });
   }
