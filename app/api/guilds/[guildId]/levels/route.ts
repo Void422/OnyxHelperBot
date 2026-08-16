@@ -16,7 +16,7 @@ const snowflake = z.string().regex(/^\d{17,20}$/);
 const messageTemplate = z.object({ content: z.string().max(2_000).optional(), title: z.string().max(256).optional(), description: z.string().max(4_096).optional(), color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(), footer: z.string().max(2_048).optional() });
 const updateSchema = z.object({
   rewards: z.array(z.object({ level: z.number().int().min(1).max(1_000), roleId: snowflake, stack: z.boolean() })).max(50),
-  xp: z.object({ curve: z.enum(levelCurves), cooldownSeconds: z.number().int().min(15).max(600), minimumMessageLength: z.number().int().min(3).max(200), minAward: z.number().int().min(1).max(100), maxAward: z.number().int().min(1).max(200), excludedChannelIds: z.array(snowflake).max(100), excludedRoleIds: z.array(snowflake).max(100) }).refine((value) => value.minAward <= value.maxAward, "Minimum XP cannot exceed maximum XP."),
+  xp: z.object({ curve: z.enum(levelCurves), baseXp: z.number().int().min(1).max(10_000_000), growthXp: z.number().int().min(0).max(10_000_000), cooldownSeconds: z.number().int().min(0).max(86_400), minimumMessageLength: z.number().int().min(0).max(2_000), minAward: z.number().int().min(1).max(100), maxAward: z.number().int().min(1).max(200), excludedChannelIds: z.array(snowflake).max(100), excludedRoleIds: z.array(snowflake).max(100) }).refine((value) => value.minAward <= value.maxAward, "Minimum XP cannot exceed maximum XP."),
   levelAnnouncementChannelId: snowflake.optional(),
   levelUpMessage: messageTemplate.optional(),
 }).refine((value) => new Set(value.rewards.map((reward) => reward.level)).size === value.rewards.length, "Each level can have only one role reward.");
@@ -48,7 +48,7 @@ export async function GET(request: Request, context: Context) {
     await requireGuildAccess(request, guildId);
     const database = getDb();
     const [rewards, [settings]] = await Promise.all([database.select().from(levelRoles).where(eq(levelRoles.guildId, guildId)), database.select().from(guildSettings).where(eq(guildSettings.guildId, guildId)).limit(1)]);
-    return json({ rewards: rewards.sort((left, right) => left.level - right.level), xp: { curve: "standard", cooldownSeconds: 60, minimumMessageLength: 8, minAward: 10, maxAward: 20, excludedChannelIds: [], excludedRoleIds: [], ...settings?.settings.xp }, levelAnnouncementChannelId: settings?.settings.levelAnnouncementChannelId, levelUpMessage: settings?.settings.messages?.levelUp });
+    return json({ rewards: rewards.sort((left, right) => left.level - right.level), xp: { curve: "standard", baseXp: 100, growthXp: 250, cooldownSeconds: 60, minimumMessageLength: 8, minAward: 10, maxAward: 20, excludedChannelIds: [], excludedRoleIds: [], ...settings?.settings.xp }, levelAnnouncementChannelId: settings?.settings.levelAnnouncementChannelId, levelUpMessage: settings?.settings.messages?.levelUp });
   } catch (error) {
     return apiFailure(error);
   }

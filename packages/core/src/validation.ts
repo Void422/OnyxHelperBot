@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { guildModules } from "./domain";
+import { levelCurves } from "./rank-ladders";
 
 const snowflake = z.string().regex(/^\d{17,20}$/, "Choose a valid Discord resource.");
 const optionalHttpsUrl = z.string().url().refine((value) => new URL(value).protocol === "https:", "Use a secure HTTPS URL.").optional();
@@ -116,9 +117,11 @@ export const settingsUpdateSchema = z.object({
       .optional(),
     xp: z
       .object({
-        curve: z.enum(["standard", "grind", "legendary"]).optional(),
-        cooldownSeconds: z.number().int().min(15).max(600).optional(),
-        minimumMessageLength: z.number().int().min(3).max(200).optional(),
+        curve: z.enum(levelCurves).optional(),
+        baseXp: z.number().int().min(1).max(10_000_000).optional(),
+        growthXp: z.number().int().min(0).max(10_000_000).optional(),
+        cooldownSeconds: z.number().int().min(0).max(86_400).optional(),
+        minimumMessageLength: z.number().int().min(0).max(2_000).optional(),
         minAward: z.number().int().min(1).max(100).optional(),
         maxAward: z.number().int().min(1).max(200).optional(),
         excludedChannelIds: z.array(snowflake).max(100).optional(),

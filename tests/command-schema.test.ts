@@ -42,3 +42,12 @@ test("Discord command schemas place required options before optional options", a
 
   assert.deepEqual(failures, []);
 });
+
+test("XP adjustments require Administrator at registration and runtime", async () => {
+  const [{ commands }, { PermissionFlagsBits }] = await Promise.all([import("../apps/bot/src/commands"), import("discord.js")]);
+  const command = commands.find((candidate) => candidate.data.name === "xp");
+  assert.ok(command);
+  const data = command.data.toJSON() as { default_member_permissions?: string | null };
+  assert.equal(data.default_member_permissions, PermissionFlagsBits.Administrator.toString());
+  assert.deepEqual(command.userPermissions, [PermissionFlagsBits.Administrator]);
+});

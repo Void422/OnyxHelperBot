@@ -36,23 +36,24 @@ const xp: OnyxCommand = {
   data: new SlashCommandBuilder()
     .setName("xp")
     .setDescription("Review or adjust a member's server XP.")
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .addSubcommand((subcommand) => subcommand.setName("get").setDescription("Review a member's current XP and level.").addUserOption((option) => option.setName("member").setDescription("The member to review").setRequired(true)))
     .addSubcommand((subcommand) => subcommand.setName("add").setDescription("Add XP to a member's profile.").addUserOption((option) => option.setName("member").setDescription("The member receiving XP").setRequired(true)).addIntegerOption((option) => option.setName("amount").setDescription("XP to add").setRequired(true).setMinValue(1).setMaxValue(1_000_000)).addStringOption((option) => option.setName("reason").setDescription("Why this XP is being added").setRequired(true).setMaxLength(500)))
     .addSubcommand((subcommand) => subcommand.setName("remove").setDescription("Remove XP without taking the total below zero.").addUserOption((option) => option.setName("member").setDescription("The member losing XP").setRequired(true)).addIntegerOption((option) => option.setName("amount").setDescription("XP to remove").setRequired(true).setMinValue(1).setMaxValue(1_000_000)).addStringOption((option) => option.setName("reason").setDescription("Why this XP is being removed").setRequired(true).setMaxLength(500)))
     .addSubcommand((subcommand) => subcommand.setName("set").setDescription("Set a member's XP to an exact value.").addUserOption((option) => option.setName("member").setDescription("The member to update").setRequired(true)).addIntegerOption((option) => option.setName("amount").setDescription("The new XP total").setRequired(true).setMinValue(0).setMaxValue(2_000_000_000)).addStringOption((option) => option.setName("reason").setDescription("Why this XP is being changed").setRequired(true).setMaxLength(500))),
   category: "Levels",
   module: "levels",
-  userPermissions: [PermissionFlagsBits.ManageGuild],
+  userPermissions: [PermissionFlagsBits.Administrator],
   cooldownSeconds: 2,
   async execute({ interaction, api }) {
+    if (!interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) throw new PublicError("Only server administrators can review or change member XP.");
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     const operation = interaction.options.getSubcommand() as "get" | "add" | "remove" | "set";
     const user = interaction.options.getUser("member", true);
     if (operation === "get") {
       const current = await api.getLevelProfile(interaction.guildId, user.id);
       const config = await api.getGuildConfig(interaction.guildId);
-      const progress = levelProgress(current.profile.xp, config.settings?.settings.xp?.curve ?? "standard");
+      const progress = levelProgress(current.profile.xp, config.settings?.settings.xp ?? "standard");
       await interaction.editReply(`${user.username} is level **${current.level}** with **${current.profile.xp.toLocaleString()} XP** (rank #${current.profile.rank}, ${progress.percent}% to the next level).`);
       return;
     }
@@ -87,7 +88,7 @@ const levelroles: OnyxCommand = {
     const rewards = [...config.levelRoles].sort((left, right) => left.level - right.level);
     if (subcommand === "list") {
       const curve = config.settings?.settings.xp?.curve ?? "standard";
-      await interaction.editReply({ embeds: [new EmbedBuilder().setColor(0xe0aa4f).setTitle("Your rank ladder").setDescription(rewards.length ? rewards.map((reward, index) => `${index === rewards.length - 1 ? "◆" : "◇"} **Level ${reward.level}** → <@&${reward.roleId}>${reward.stack ? " · stacks" : ""}`).join("\n") : "No ladder yet. Use `/levelroles setup` to create all seven roles at once.").setFooter({ text: `${curve === "legendary" ? "Legend" : curve === "grind" ? "The Grind" : "Momentum"} XP curve` })] });
+      await interaction.editReply({ embeds: [new EmbedBuilder().setColor(0xe0aa4f).setTitle("Your rank ladder").setDescription(rewards.length ? rewards.map((reward, index) => `${index === rewards.length - 1 ? "◆" : "◇"} **Level ${reward.level}** → <@&${reward.roleId}>${reward.stack ? " · stacks" : ""}`).join("\n") : "No ladder yet. Use `/levelroles setup` to create all seven roles at once.").setFooter({ text: `${curve === "custom" ? "Custom" : curve === "legendary" ? "Legend" : curve === "grind" ? "The Grind" : "Momentum"} XP curve` })] });
       return;
     }
     if (!interaction.memberPermissions.has(PermissionFlagsBits.ManageRoles)) throw new PublicError("You need Manage Roles to create a rank ladder.");

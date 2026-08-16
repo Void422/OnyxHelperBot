@@ -112,7 +112,9 @@ export interface GuildSettingsData {
   commandOverrides?: Record<string, { enabled?: boolean; cooldownSeconds?: number }>;
   warningThresholds?: WarningThreshold[];
   xp?: {
-    curve?: "standard" | "grind" | "legendary";
+    curve?: "standard" | "grind" | "legendary" | "custom";
+    baseXp?: number;
+    growthXp?: number;
     cooldownSeconds?: number;
     minimumMessageLength?: number;
     minAward?: number;

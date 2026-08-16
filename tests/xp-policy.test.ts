@@ -23,3 +23,10 @@ test("excluded, tiny, and emoji-only messages receive no XP", () => {
   assert.equal(policy.evaluate({ ...base, content: "tiny" }, config).reason, "too_short");
   assert.equal(policy.evaluate({ ...base, content: "😀😀😀😀😀😀😀😀😀😀😀😀" }, config).reason, "low_signal");
 });
+
+test("zero cooldown and zero minimum length allow consecutive short messages", () => {
+  const openConfig = { ...config, cooldownMs: 0, minimumLength: 0 };
+  const policy = new XpPolicy();
+  assert.ok(policy.evaluate({ ...base, content: "a" }, openConfig).award > 0);
+  assert.ok(policy.evaluate({ ...base, content: "b" }, openConfig).award > 0);
+});

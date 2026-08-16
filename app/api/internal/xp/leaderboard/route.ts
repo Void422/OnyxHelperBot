@@ -15,7 +15,7 @@ export async function GET(request: Request) {
       database.select({ userId: levelProfiles.userId, xp: levelProfiles.xp, messageCount: levelProfiles.messageCount, weeklyXp: levelProfiles.weeklyXp }).from(levelProfiles).where(eq(levelProfiles.guildId, guildId)).orderBy(desc(levelProfiles.xp)).limit(10),
       database.select({ settings: guildSettings.settings }).from(guildSettings).where(eq(guildSettings.guildId, guildId)).limit(1),
     ]);
-    const curve = settings?.settings.xp?.curve ?? "standard";
+    const curve = settings?.settings.xp ?? "standard";
     return json({ leaderboard: rows.map((row, index) => ({ ...row, rank: index + 1, level: levelFromXp(row.xp, curve) })) });
   } catch (error) {
     return apiFailure(error);
