@@ -60,7 +60,7 @@ export function createOnyxClient(api: OnyxApiClient) {
   client.on(Events.MessageDelete, (message) => void handleMessageDelete(message, api));
   client.on(Events.MessageUpdate, (before, after) => void handleMessageUpdate(before, after, api));
   client.on(Events.GuildRoleCreate, (role) => void handleRoleChange("created", role, api));
-  client.on(Events.GuildRoleUpdate, (_before, after) => void handleRoleChange("updated", after, api));
+  client.on(Events.GuildRoleUpdate, (before, after) => void handleRoleChange("updated", after, api, before));
   client.on(Events.GuildRoleDelete, (role) => void handleRoleChange("deleted", role, api));
   client.on(Events.ChannelCreate, (channel) => channel.isDMBased() ? undefined : void handleChannelChange("created", channel, api));
   client.on(Events.ChannelUpdate, (_before, after) => after.isDMBased() ? undefined : void handleChannelChange("updated", after, api));
