@@ -51,3 +51,15 @@ test("XP adjustments require Administrator at registration and runtime", async (
   assert.equal(data.default_member_permissions, PermissionFlagsBits.Administrator.toString());
   assert.deepEqual(command.userPermissions, [PermissionFlagsBits.Administrator]);
 });
+
+test("message limits require Administrator and expose set, remove, and list", async () => {
+  const [{ commands }, { PermissionFlagsBits }] = await Promise.all([import("../apps/bot/src/commands"), import("discord.js")]);
+  const command = commands.find((candidate) => candidate.data.name === "message-limit");
+  assert.ok(command);
+  const data = command.data.toJSON() as { default_member_permissions?: string | null; options?: CommandOption[] };
+  assert.equal(data.default_member_permissions, PermissionFlagsBits.Administrator.toString());
+  assert.deepEqual(command.userPermissions, [PermissionFlagsBits.Administrator]);
+  assert.deepEqual(data.options?.map((option) => option.name), ["set", "remove", "list"]);
+  const set = data.options?.find((option) => option.name === "set");
+  assert.deepEqual(set?.options?.map((option) => option.name), ["channel", "maximum"]);
+});

@@ -64,6 +64,11 @@ export const commandCatalogEntries: CommandCatalogEntry[] = [
     ["role.members", "List members who currently have a role.", 2],
   ]),
   ...entries("Administration", "Manage Server", undefined, [["announce", "Post a styled announcement with an optional image.", 5]]),
+  ...entries("Administration", "Administrator", undefined, [
+    ["message-limit.set", "Set or change a channel's per-person lifetime message limit.", 2],
+    ["message-limit.remove", "Remove a channel's message limit and clear its saved counts.", 2],
+    ["message-limit.list", "List every active channel message limit.", 2],
+  ]),
   ...entries("Administration", "Manage Messages", undefined, [["say", "Post a plain message through Onyx with mentions disabled.", 3]]),
   ...entries("Administration", "Manage Channels", undefined, [["topic", "Update or clear a text channel topic."], ["thread", "Start a public discussion thread."]]),
   ...entries("Giveaways", "Manage Server", "giveaways", [
