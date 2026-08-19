@@ -14,6 +14,7 @@ const navigation = [
     { key: "commands", label: "Commands", icon: ListTree, path: "/commands" },
     { key: "moderation", label: "Moderation", icon: Gavel, path: "/moderation" },
     { key: "automod", label: "Automod", icon: ShieldCheck, path: "/automod" },
+    { key: "message-limits", label: "Message limits", icon: MessageSquareText, path: "/message-limits" },
     { key: "tickets", label: "Tickets", icon: TicketCheck, path: "/tickets" },
   ] },
   { label: "Member experience", items: [

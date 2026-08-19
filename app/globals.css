@@ -242,6 +242,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .sticky-save-bar small { color: var(--quiet); font-size: 10px; }
 .danger-icon { color: #9e5c55; }
 .threshold-row { display: grid; grid-template-columns: 100px 1fr 1fr 38px; gap: 10px; align-items: end; padding: 12px; margin-bottom: 10px; border: 1px solid var(--line); border-radius: 9px; background: #101012; }
+.message-limit-list { display: grid; gap: 8px; margin-bottom: 14px; }
+.message-limit-row { display: grid; grid-template-columns: minmax(190px, 1fr) minmax(160px, .65fr) 64px 34px; gap: 10px; align-items: end; padding: 12px; border: 1px solid var(--line); border-radius: 9px; background: #101012; }
+.message-limit-row .switch-control { min-height: 42px; align-self: end; }
+.message-limit-row > .icon-button { margin-bottom: 4px; }
+.empty-state.compact { min-height: 145px; margin-bottom: 14px; border: 1px dashed #302d31; border-radius: 9px; }
+.limit-behavior-list { display: grid; gap: 11px; }
+.limit-behavior-list > div { display: grid; grid-template-columns: 18px 1fr; gap: 8px; align-items: start; color: #aaa5a0; font-size: 11px; line-height: 1.5; }
+.limit-behavior-list svg { margin-top: 1px; color: var(--positive); }
 
 .module-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .module-card { position: relative; min-height: 108px; display: grid; align-content: start; gap: 6px; padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: #101012; color: var(--ink); text-align: left; cursor: pointer; }
@@ -472,7 +480,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .module-toggle-list, .module-grid, .action-grid, .studio-tabs { grid-template-columns: 1fr; } .page-heading { flex-direction: column; } .appeal-header { margin-bottom: 46px; }
   .studio-tabs { display: flex; overflow-x: auto; } .studio-tabs button { flex: 0 0 150px; } .automod-layout { grid-template-columns: 1fr; } .rule-rail { position: static; display: flex; overflow-x: auto; } .rule-nav { flex: 0 0 150px; }
   .command-row-card { grid-template-columns: 1fr; } .command-identity { grid-template-columns: 1fr; gap: 7px; } .command-controls { justify-content: flex-end; } .command-summary-strip { gap: 10px; flex-wrap: wrap; }
-  .log-route { grid-template-columns: 8px 1fr; padding: 12px 8px; } .log-route .select { grid-column: 2; } .split-pickers, .rank-preset-grid { grid-template-columns: 1fr; } .reward-row, .threshold-row { grid-template-columns: 1fr 1fr; }
+  .log-route { grid-template-columns: 8px 1fr; padding: 12px 8px; } .log-route .select { grid-column: 2; } .split-pickers, .rank-preset-grid { grid-template-columns: 1fr; } .reward-row, .threshold-row, .message-limit-row { grid-template-columns: 1fr 1fr; }
   .rank-forge-action { align-items: stretch; flex-direction: column; } .giveaway-event-card { grid-template-columns: 38px 1fr; } .giveaway-event-reward { grid-column: 2; padding: 9px 0 0; border-top: 1px solid var(--line); border-left: 0; }
   .sticky-save-bar { align-items: flex-start; flex-direction: column; } .sticky-save-bar .button { width: 100%; } .sticky-save-bar small { display: none; }
 }
