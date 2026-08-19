@@ -14,3 +14,8 @@ export function countMemberMessages(messages: Iterable<CountableMessage>, userId
 export function isMessageWithinLimit(messageCount: number, maximum: number) {
   return messageCount <= maximum;
 }
+
+export function channelMessageLimitNotice(userId: string, maximum: number) {
+  const amount = maximum.toLocaleString("en-US");
+  return `<@${userId}>, only **${amount} message${maximum === 1 ? "" : "s"}** ${maximum === 1 ? "is" : "are"} allowed in this channel.`;
+}
