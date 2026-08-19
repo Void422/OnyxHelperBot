@@ -1,6 +1,6 @@
 import { EmbedBuilder, type GuildMember, type Message } from "discord.js";
 import { isAutomodExempt } from "@/packages/core/src/automod";
-import { countMemberMessages } from "@/packages/core/src/channel-message-limits";
+import { channelMessageLimitNotice, countMemberMessages } from "@/packages/core/src/channel-message-limits";
 import { levelFromXp } from "@/packages/core/src/leveling";
 import { XpPolicy, type XpPolicyConfig } from "@/packages/core/src/xp-policy";
 import type { BotGuildConfig, OnyxApiClient } from "../api-client";
@@ -11,6 +11,8 @@ const xpPolicy = new XpPolicy();
 const messageWindows = new Map<string, number[]>();
 const duplicateWindows = new Map<string, string[]>();
 const channelLimitQueues = new Map<string, Promise<void>>();
+const activeChannelLimitNotices = new Set<string>();
+const CHANNEL_LIMIT_NOTICE_MS = 5_000;
 
 async function serialChannelLimit<T>(key: string, task: () => Promise<T>): Promise<T> {
   const previous = channelLimitQueues.get(key) ?? Promise.resolve();
@@ -53,6 +55,25 @@ async function countPriorMessages(message: Message<true>, maximum: number) {
   return count;
 }
 
+async function sendChannelLimitNotice(message: Message<true>, maximum: number, key: string) {
+  if (activeChannelLimitNotices.has(key)) return;
+  activeChannelLimitNotices.add(key);
+  const notice = await message.channel.send({
+    content: channelMessageLimitNotice(message.author.id, maximum),
+    allowedMentions: { users: [message.author.id] },
+  }).catch((error) => {
+    activeChannelLimitNotices.delete(key);
+    logger.warn({ event: "message_limit.notice_failed", guildId: message.guildId, channelId: message.channelId, userId: message.author.id, error });
+    return null;
+  });
+  if (!notice) return;
+  const timer = setTimeout(() => {
+    void notice.delete().catch((error) => logger.warn({ event: "message_limit.notice_delete_failed", guildId: message.guildId, channelId: message.channelId, userId: message.author.id, messageId: notice.id, error }))
+      .finally(() => activeChannelLimitNotices.delete(key));
+  }, CHANNEL_LIMIT_NOTICE_MS);
+  timer.unref();
+}
+
 async function enforceChannelMessageLimit(message: Message<true>, config: BotGuildConfig, api: OnyxApiClient) {
   const configured = config.channelMessageLimits?.find((limit) => limit.enabled && limit.channelId === message.channelId);
   if (!configured) return false;
@@ -69,6 +90,7 @@ async function enforceChannelMessageLimit(message: Message<true>, config: BotGui
     } else {
       logger.warn({ event: "message_limit.delete_failed", guildId: message.guildId, channelId: message.channelId, userId: message.author.id, messageId: message.id, reason: "message_not_deletable" });
     }
+    await sendChannelLimitNotice(message, claim.maximum, key);
     logger.info({ event: "message_limit.enforced", guildId: message.guildId, channelId: message.channelId, userId: message.author.id, messageId: message.id, count: claim.messageCount, maximum: claim.maximum });
     return true;
   });

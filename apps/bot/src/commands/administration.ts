@@ -192,9 +192,9 @@ const messageLimit: OnyxCommand = {
 
     const bot = interaction.guild.members.me;
     const permissions = bot ? channel.permissionsFor(bot) : null;
-    const missing = [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.ManageMessages]
+    const missing = [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.ManageMessages, PermissionFlagsBits.SendMessages]
       .filter((permission) => !permissions?.has(permission));
-    if (missing.length) throw new PublicError(`Onyx needs **View Channel**, **Read Message History**, and **Manage Messages** in <#${channel.id}> before this limit can work.`);
+    if (missing.length) throw new PublicError(`Onyx needs **View Channel**, **Read Message History**, **Manage Messages**, and **Send Messages** in <#${channel.id}> before this limit can work.`);
 
     const maximum = interaction.options.getInteger("maximum", true);
     await api.setChannelMessageLimit({ guildId: interaction.guildId, channelId: channel.id, actorUserId: interaction.user.id, maxMessages: maximum });
