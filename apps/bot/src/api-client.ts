@@ -3,6 +3,9 @@ import type { GuildSettingsData, GuildModule, GiveawayRequirements } from "@/pac
 import type { LevelCurve } from "@/packages/core/src/rank-ladders";
 import { config } from "./config";
 import { PublicError } from "./errors";
+import { MessageLimitStore } from "./message-limit-store";
+
+const localMessageLimits = config.ONYX_MESSAGE_LIMITS_PATH ? new MessageLimitStore(config.ONYX_MESSAGE_LIMITS_PATH) : null;
 
 export interface BotGuildConfig {
   settings: {
@@ -61,6 +64,12 @@ export class OnyxApiClient {
     const cached = this.configCache.get(guildId);
     if (!force && cached && cached.expiresAt > Date.now()) return cached.value;
     const value = await this.request<BotGuildConfig>(`/api/internal/guilds/${guildId}/config`);
+    if (localMessageLimits) {
+      const local = await localMessageLimits.list(guildId);
+      const merged = new Map((value.channelMessageLimits ?? []).map((limit) => [limit.channelId, limit]));
+      for (const limit of local) merged.set(limit.channelId, limit);
+      value.channelMessageLimits = [...merged.values()];
+    }
     this.configCache.set(guildId, { value, expiresAt: Date.now() + 30_000 });
     return value;
   }
@@ -131,7 +140,11 @@ export class OnyxApiClient {
     });
   }
 
-  claimChannelMessage(input: { guildId: string; channelId: string; userId: string; seedCount?: number }) {
+  async claimChannelMessage(input: { guildId: string; channelId: string; userId: string; seedCount?: number }) {
+    if (localMessageLimits) {
+      const local = await localMessageLimits.claim(input);
+      if (local.active) return local;
+    }
     return this.request<
       | { active: false; allowed: true; messageCount: number; maximum: null }
       | { active: true; needsSeed: true; maximum: number }
@@ -140,6 +153,13 @@ export class OnyxApiClient {
   }
 
   async setChannelMessageLimit(input: { guildId: string; channelId: string; actorUserId: string; maxMessages: number }) {
+    if (localMessageLimits) {
+      const limit = await localMessageLimits.set(input.guildId, input.channelId, input.maxMessages).catch((error) => {
+        throw new PublicError(error instanceof Error ? error.message : "The channel message limit could not be saved.");
+      });
+      this.configCache.delete(input.guildId);
+      return { limit };
+    }
     const result = await this.request<{ limit: NonNullable<BotGuildConfig["channelMessageLimits"]>[number] }>("/api/internal/message-limits/config", {
       method: "PUT",
       body: JSON.stringify(input),
@@ -149,6 +169,10 @@ export class OnyxApiClient {
   }
 
   async removeChannelMessageLimit(input: { guildId: string; channelId: string; actorUserId: string }) {
+    if (localMessageLimits && await localMessageLimits.remove(input.guildId, input.channelId)) {
+      this.configCache.delete(input.guildId);
+      return { removed: true as const };
+    }
     const result = await this.request<{ removed: true }>("/api/internal/message-limits/config", {
       method: "DELETE",
       body: JSON.stringify(input),

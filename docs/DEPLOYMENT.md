@@ -22,7 +22,7 @@ npm ci
 npm run build:bot
 ```
 
-The bot host requires `DISCORD_TOKEN`, `DISCORD_CLIENT_ID`, `ONYX_API_URL`, `ONYX_SERVICE_TOKEN`, and optionally `LOG_LEVEL`. Run:
+The bot host requires `DISCORD_TOKEN`, `DISCORD_CLIENT_ID`, `ONYX_API_URL`, `ONYX_SERVICE_TOKEN`, and optionally `LOG_LEVEL`. Set `ONYX_MESSAGE_LIMITS_PATH` to a persistent, owner-writable file when `/message-limit` configuration should live on the bot host instead of the dashboard data service. Run:
 
 ```bash
 npm run start:bot
