@@ -127,6 +127,38 @@ export const automodRules = sqliteTable(
   (table) => [uniqueIndex("automod_rules_guild_kind_unique").on(table.guildId, table.kind), index("automod_rules_guild_idx").on(table.guildId)],
 );
 
+export const channelMessageLimits = sqliteTable(
+  "channel_message_limits",
+  {
+    id: text("id").primaryKey(),
+    guildId: text("guild_id")
+      .notNull()
+      .references(() => guilds.id, { onDelete: "cascade" }),
+    channelId: text("channel_id").notNull(),
+    maxMessages: integer("max_messages").notNull(),
+    enabled: integer("enabled", { mode: "boolean" }).notNull().default(true),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("channel_message_limits_guild_channel_unique").on(table.guildId, table.channelId),
+    index("channel_message_limits_guild_idx").on(table.guildId),
+  ],
+);
+
+export const channelMessageCounts = sqliteTable(
+  "channel_message_counts",
+  {
+    guildId: text("guild_id")
+      .notNull()
+      .references(() => guilds.id, { onDelete: "cascade" }),
+    channelId: text("channel_id").notNull(),
+    userId: text("user_id").notNull(),
+    messageCount: integer("message_count").notNull().default(0),
+    ...timestamps,
+  },
+  (table) => [primaryKey({ columns: [table.guildId, table.channelId, table.userId] })],
+);
+
 export const moderationCases = sqliteTable(
   "moderation_cases",
   {

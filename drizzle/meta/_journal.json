@@ -15,6 +15,13 @@
       "when": 1786812573939,
       "tag": "0001_tiny_iron_man",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1787172499213,
+      "tag": "0002_furry_night_nurse",
+      "breakpoints": true
     }
   ]
 }

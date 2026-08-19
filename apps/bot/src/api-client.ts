@@ -23,6 +23,7 @@ export interface BotGuildConfig {
     exemptChannelIds: string[];
   }>;
   levelRoles: Array<{ level: number; roleId: string; stack: boolean }>;
+  channelMessageLimits?: Array<{ id: string; guildId: string; channelId: string; maxMessages: number; enabled: boolean }>;
 }
 
 interface CacheEntry {
@@ -128,6 +129,14 @@ export class OnyxApiClient {
       method: "POST",
       body: JSON.stringify(input),
     });
+  }
+
+  claimChannelMessage(input: { guildId: string; channelId: string; userId: string; seedCount?: number }) {
+    return this.request<
+      | { active: false; allowed: true; messageCount: number; maximum: null }
+      | { active: true; needsSeed: true; maximum: number }
+      | { active: true; allowed: boolean; messageCount: number; maximum: number }
+    >("/api/internal/message-limits/claim", { method: "POST", body: JSON.stringify(input) });
   }
 
   getLevelProfile(guildId: string, userId: string) {

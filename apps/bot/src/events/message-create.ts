@@ -1,5 +1,6 @@
 import { EmbedBuilder, type GuildMember, type Message } from "discord.js";
 import { isAutomodExempt } from "@/packages/core/src/automod";
+import { countMemberMessages } from "@/packages/core/src/channel-message-limits";
 import { levelFromXp } from "@/packages/core/src/leveling";
 import { XpPolicy, type XpPolicyConfig } from "@/packages/core/src/xp-policy";
 import type { BotGuildConfig, OnyxApiClient } from "../api-client";
@@ -9,6 +10,19 @@ import { configuredMessage } from "../messages";
 const xpPolicy = new XpPolicy();
 const messageWindows = new Map<string, number[]>();
 const duplicateWindows = new Map<string, string[]>();
+const channelLimitQueues = new Map<string, Promise<void>>();
+
+async function serialChannelLimit<T>(key: string, task: () => Promise<T>): Promise<T> {
+  const previous = channelLimitQueues.get(key) ?? Promise.resolve();
+  const run = previous.catch(() => undefined).then(task);
+  const tail = run.then(() => undefined, () => undefined);
+  channelLimitQueues.set(key, tail);
+  try {
+    return await run;
+  } finally {
+    if (channelLimitQueues.get(key) === tail) channelLimitQueues.delete(key);
+  }
+}
 
 function normalize(value: string) {
   return value.toLocaleLowerCase().replace(/\s+/g, " ").trim();
@@ -24,6 +38,40 @@ function configuredXp(config: BotGuildConfig): XpPolicyConfig {
     minAward: xp?.minAward ?? 10,
     maxAward: xp?.maxAward ?? 20,
   };
+}
+
+async function countPriorMessages(message: Message<true>, maximum: number) {
+  let count = 0;
+  let before = message.id;
+  while (count < maximum) {
+    const messages = await message.channel.messages.fetch({ before, limit: 100 });
+    count = countMemberMessages(messages.values(), message.author.id, maximum, count);
+    const oldest = messages.last();
+    if (messages.size < 100 || !oldest) break;
+    before = oldest.id;
+  }
+  return count;
+}
+
+async function enforceChannelMessageLimit(message: Message<true>, config: BotGuildConfig, api: OnyxApiClient) {
+  const configured = config.channelMessageLimits?.find((limit) => limit.enabled && limit.channelId === message.channelId);
+  if (!configured) return false;
+  const key = `${message.guildId}:${message.channelId}:${message.author.id}`;
+  return serialChannelLimit(key, async () => {
+    let claim = await api.claimChannelMessage({ guildId: message.guildId, channelId: message.channelId, userId: message.author.id });
+    if (claim.active && "needsSeed" in claim) {
+      const seedCount = await countPriorMessages(message, claim.maximum);
+      claim = await api.claimChannelMessage({ guildId: message.guildId, channelId: message.channelId, userId: message.author.id, seedCount });
+    }
+    if (!claim.active || !("allowed" in claim) || claim.allowed) return false;
+    if (message.deletable) {
+      await message.delete();
+    } else {
+      logger.warn({ event: "message_limit.delete_failed", guildId: message.guildId, channelId: message.channelId, userId: message.author.id, messageId: message.id, reason: "message_not_deletable" });
+    }
+    logger.info({ event: "message_limit.enforced", guildId: message.guildId, channelId: message.channelId, userId: message.author.id, messageId: message.id, count: claim.messageCount, maximum: claim.maximum });
+    return true;
+  });
 }
 
 function isExempt(message: Message<true>, rule: BotGuildConfig["automodRules"][number]) {
@@ -179,6 +227,7 @@ export async function handleMessage(message: Message, api: OnyxApiClient) {
   if (!message.inGuild() || message.author.bot || !message.member) return;
   try {
     const config = await api.getGuildConfig(message.guildId);
+    if (await enforceChannelMessageLimit(message, config, api)) return;
     if (config.settings?.enabledModules.includes("automod")) {
       const blocked = await applyAutomod(message, config, api);
       if (blocked) return;

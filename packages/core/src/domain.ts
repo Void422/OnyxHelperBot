@@ -153,6 +153,14 @@ export interface AutomodConditions {
   timeoutSeconds?: number;
 }
 
+export interface ChannelMessageLimit {
+  id: string;
+  guildId: string;
+  channelId: string;
+  maxMessages: number;
+  enabled: boolean;
+}
+
 export type LogCategory =
   | "moderation"
   | "messages"
