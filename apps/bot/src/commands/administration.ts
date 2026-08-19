@@ -146,4 +146,60 @@ const thread: OnyxCommand = {
   },
 };
 
-export const administrationCommands: OnyxCommand[] = [roleCommand, announce, say, topic, thread];
+const messageLimit: OnyxCommand = {
+  data: new SlashCommandBuilder()
+    .setName("message-limit")
+    .setDescription("Control how many messages each person can post in a channel.")
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+    .addSubcommand((subcommand) => subcommand.setName("set").setDescription("Set or change a channel's per-person message limit.")
+      .addChannelOption((option) => option.setName("channel").setDescription("The channel to limit").setRequired(true).addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement))
+      .addIntegerOption((option) => option.setName("maximum").setDescription("Messages allowed per person").setRequired(true).setMinValue(1).setMaxValue(100_000)))
+    .addSubcommand((subcommand) => subcommand.setName("remove").setDescription("Remove a channel's message limit.")
+      .addChannelOption((option) => option.setName("channel").setDescription("The channel to stop limiting").setRequired(true).addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)))
+    .addSubcommand((subcommand) => subcommand.setName("list").setDescription("List every active channel message limit.")),
+  category: "Administration",
+  userPermissions: [PermissionFlagsBits.Administrator],
+  cooldownSeconds: 2,
+  async execute({ interaction, api }) {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    const subcommand = interaction.options.getSubcommand();
+
+    if (subcommand === "list") {
+      const config = await api.getGuildConfig(interaction.guildId, true);
+      const limits = (config.channelMessageLimits ?? []).filter((limit) => limit.enabled).sort((left, right) => left.channelId.localeCompare(right.channelId));
+      if (!limits.length) {
+        await interaction.editReply("No channel message limits are active.");
+        return;
+      }
+      await interaction.editReply({
+        embeds: [new EmbedBuilder()
+          .setColor(0xd7d2c7)
+          .setTitle("Channel message limits")
+          .setDescription(limits.map((limit) => `<#${limit.channelId}> — **${limit.maxMessages.toLocaleString()}** per person`).join("\n"))],
+        allowedMentions: { parse: [] },
+      });
+      return;
+    }
+
+    const channel = interaction.options.getChannel("channel", true);
+    if (channel.type !== ChannelType.GuildText && channel.type !== ChannelType.GuildAnnouncement) throw new PublicError("Choose a server text or announcement channel.");
+
+    if (subcommand === "remove") {
+      await api.removeChannelMessageLimit({ guildId: interaction.guildId, channelId: channel.id, actorUserId: interaction.user.id });
+      await interaction.editReply(`Removed the message limit from <#${channel.id}>.`);
+      return;
+    }
+
+    const bot = interaction.guild.members.me;
+    const permissions = bot ? channel.permissionsFor(bot) : null;
+    const missing = [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.ManageMessages]
+      .filter((permission) => !permissions?.has(permission));
+    if (missing.length) throw new PublicError(`Onyx needs **View Channel**, **Read Message History**, and **Manage Messages** in <#${channel.id}> before this limit can work.`);
+
+    const maximum = interaction.options.getInteger("maximum", true);
+    await api.setChannelMessageLimit({ guildId: interaction.guildId, channelId: channel.id, actorUserId: interaction.user.id, maxMessages: maximum });
+    await interaction.editReply(`Each person can now post **${maximum.toLocaleString()}** messages in <#${channel.id}>. Later messages will be deleted automatically.`);
+  },
+};
+
+export const administrationCommands: OnyxCommand[] = [roleCommand, announce, say, topic, thread, messageLimit];

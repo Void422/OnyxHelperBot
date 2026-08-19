@@ -139,6 +139,24 @@ export class OnyxApiClient {
     >("/api/internal/message-limits/claim", { method: "POST", body: JSON.stringify(input) });
   }
 
+  async setChannelMessageLimit(input: { guildId: string; channelId: string; actorUserId: string; maxMessages: number }) {
+    const result = await this.request<{ limit: NonNullable<BotGuildConfig["channelMessageLimits"]>[number] }>("/api/internal/message-limits/config", {
+      method: "PUT",
+      body: JSON.stringify(input),
+    });
+    this.configCache.delete(input.guildId);
+    return result;
+  }
+
+  async removeChannelMessageLimit(input: { guildId: string; channelId: string; actorUserId: string }) {
+    const result = await this.request<{ removed: true }>("/api/internal/message-limits/config", {
+      method: "DELETE",
+      body: JSON.stringify(input),
+    });
+    this.configCache.delete(input.guildId);
+    return result;
+  }
+
   getLevelProfile(guildId: string, userId: string) {
     const query = new URLSearchParams({ guildId, userId });
     return this.request<{ profile: { xp: number; messageCount: number; rank: number }; level: number }>(`/api/internal/xp/profile?${query}`);
