@@ -16,6 +16,10 @@ const adjustmentSchema = z.object({
   amount: z.number().int().min(0).max(2_000_000_000),
   reason: z.string().min(1).max(500),
 });
+const resetSchema = z.object({
+  guildId: snowflake,
+  moderatorUserId: snowflake,
+});
 
 export async function GET(request: Request) {
   try {
@@ -64,6 +68,37 @@ export async function PATCH(request: Request) {
       after: { xp: nextXp, reason: parsed.data.reason },
     });
     return json({ profile: { xp: nextXp, messageCount: current?.messageCount ?? 0 }, level: levelFromXp(nextXp, settings?.settings.xp ?? "standard") });
+  } catch (error) {
+    return apiFailure(error);
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    requireServiceToken(request);
+    const parsed = resetSchema.safeParse(await readJson(request));
+    if (!parsed.success) throw new ApiError(400, "The server-wide XP reset is invalid.", "validation_failed", parsed.error.flatten());
+    const database = getDb();
+    const [profiles] = await database.select({ value: count() }).from(levelProfiles).where(eq(levelProfiles.guildId, parsed.data.guildId));
+    await database.update(levelProfiles).set({
+      xp: 0,
+      messageCount: 0,
+      lastXpAt: null,
+      weeklyXp: 0,
+      monthlyXp: 0,
+      updatedAt: new Date(),
+    }).where(eq(levelProfiles.guildId, parsed.data.guildId));
+    await recordAudit({
+      guildId: parsed.data.guildId,
+      actorUserId: parsed.data.moderatorUserId,
+      source: "bot",
+      action: "levels.xp_reset_all",
+      targetType: "guild",
+      targetId: parsed.data.guildId,
+      before: { profileCount: profiles.value },
+      after: { xp: 0, messageCount: 0, weeklyXp: 0, monthlyXp: 0 },
+    });
+    return json({ resetCount: profiles.value });
   } catch (error) {
     return apiFailure(error);
   }

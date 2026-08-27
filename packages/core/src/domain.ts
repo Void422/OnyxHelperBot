@@ -115,6 +115,7 @@ export interface GuildSettingsData {
     curve?: "standard" | "grind" | "legendary" | "custom";
     baseXp?: number;
     growthXp?: number;
+    growthPercent?: number;
     cooldownSeconds?: number;
     minimumMessageLength?: number;
     minAward?: number;

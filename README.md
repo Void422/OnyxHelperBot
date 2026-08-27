@@ -8,7 +8,7 @@ The current product includes:
 
 - Discord OAuth2 sign-in and live Manage Server authorization
 - server selector with least-privilege bot installation links
-- 51 top-level slash commands with 78 configurable command actions across moderation, administration, community, and utilities
+- 52 top-level slash commands with 83 configurable command actions across moderation, administration, community, and utilities
 - moderation cases, bans, kicks, softbans, warnings, timeouts, history, staff notes, purges, locks, roles, nicknames, and slowmode
 - persistent temporary-action recovery after bot restarts
 - configurable warning escalation
