@@ -1,5 +1,5 @@
 import { EmbedBuilder, MessageFlags, PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
-import { levelProgress } from "@/packages/core/src/leveling";
+import { levelProgress, xpForLevel } from "@/packages/core/src/leveling";
 import { getRankLadderPreset, rankLadderPresets, type RankPermissionKey } from "@/packages/core/src/rank-ladders";
 import { PublicError } from "../errors";
 import type { OnyxCommand } from "./types";
@@ -40,7 +40,13 @@ const xp: OnyxCommand = {
     .addSubcommand((subcommand) => subcommand.setName("get").setDescription("Review a member's current XP and level.").addUserOption((option) => option.setName("member").setDescription("The member to review").setRequired(true)))
     .addSubcommand((subcommand) => subcommand.setName("add").setDescription("Add XP to a member's profile.").addUserOption((option) => option.setName("member").setDescription("The member receiving XP").setRequired(true)).addIntegerOption((option) => option.setName("amount").setDescription("XP to add").setRequired(true).setMinValue(1).setMaxValue(1_000_000)).addStringOption((option) => option.setName("reason").setDescription("Why this XP is being added").setRequired(true).setMaxLength(500)))
     .addSubcommand((subcommand) => subcommand.setName("remove").setDescription("Remove XP without taking the total below zero.").addUserOption((option) => option.setName("member").setDescription("The member losing XP").setRequired(true)).addIntegerOption((option) => option.setName("amount").setDescription("XP to remove").setRequired(true).setMinValue(1).setMaxValue(1_000_000)).addStringOption((option) => option.setName("reason").setDescription("Why this XP is being removed").setRequired(true).setMaxLength(500)))
-    .addSubcommand((subcommand) => subcommand.setName("set").setDescription("Set a member's XP to an exact value.").addUserOption((option) => option.setName("member").setDescription("The member to update").setRequired(true)).addIntegerOption((option) => option.setName("amount").setDescription("The new XP total").setRequired(true).setMinValue(0).setMaxValue(2_000_000_000)).addStringOption((option) => option.setName("reason").setDescription("Why this XP is being changed").setRequired(true).setMaxLength(500))),
+    .addSubcommand((subcommand) => subcommand.setName("set").setDescription("Set a member's XP to an exact value.").addUserOption((option) => option.setName("member").setDescription("The member to update").setRequired(true)).addIntegerOption((option) => option.setName("amount").setDescription("The new XP total").setRequired(true).setMinValue(0).setMaxValue(2_000_000_000)).addStringOption((option) => option.setName("reason").setDescription("Why this XP is being changed").setRequired(true).setMaxLength(500)))
+    .addSubcommand((subcommand) => subcommand.setName("configure-curve").setDescription("Set a custom XP curve with flat and percentage growth.")
+      .addIntegerOption((option) => option.setName("starting-xp").setDescription("XP needed for level 0 to level 1").setRequired(true).setMinValue(1).setMaxValue(10_000_000))
+      .addIntegerOption((option) => option.setName("flat-increase").setDescription("Fixed XP added to each next level cost").setRequired(true).setMinValue(0).setMaxValue(10_000_000))
+      .addNumberOption((option) => option.setName("growth-percent").setDescription("Percent of the previous cost added each level").setRequired(true).setMinValue(0).setMaxValue(1_000)))
+    .addSubcommand((subcommand) => subcommand.setName("reset-all").setDescription("Permanently reset every member's XP, stats, and rank roles.")
+      .addBooleanOption((option) => option.setName("confirm").setDescription("Choose True to confirm the permanent server-wide reset").setRequired(true))),
   category: "Levels",
   module: "levels",
   userPermissions: [PermissionFlagsBits.Administrator],
@@ -48,7 +54,56 @@ const xp: OnyxCommand = {
   async execute({ interaction, api }) {
     if (!interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) throw new PublicError("Only server administrators can review or change member XP.");
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-    const operation = interaction.options.getSubcommand() as "get" | "add" | "remove" | "set";
+    const operation = interaction.options.getSubcommand() as "get" | "add" | "remove" | "set" | "configure-curve" | "reset-all";
+    if (operation === "configure-curve") {
+      const baseXp = interaction.options.getInteger("starting-xp", true);
+      const growthXp = interaction.options.getInteger("flat-increase", true);
+      const growthPercent = interaction.options.getNumber("growth-percent", true);
+      const curve = { curve: "custom" as const, baseXp, growthXp, growthPercent };
+      const config = await api.getGuildConfig(interaction.guildId);
+      const minAward = config.settings?.settings.xp?.minAward ?? 10;
+      const maxAward = config.settings?.settings.xp?.maxAward ?? 20;
+      const averageAward = (minAward + maxAward) / 2;
+      await api.configureXpCurve({ guildId: interaction.guildId, actorUserId: interaction.user.id, baseXp, growthXp, growthPercent });
+      const forecast = [0, 1, 5, 10, 25].map((level) => {
+        const required = xpForLevel(level + 1, curve) - xpForLevel(level, curve);
+        return `**Level ${level} → ${level + 1}:** ${required.toLocaleString()} XP · ~${Math.ceil(required / averageAward).toLocaleString()} eligible messages`;
+      });
+      await interaction.editReply({ embeds: [new EmbedBuilder().setColor(0xe0aa4f).setTitle("◆ Custom XP curve enabled").setDescription([
+        `First level: **${baseXp.toLocaleString()} XP**`,
+        `Each next cost: **previous cost + ${growthXp.toLocaleString()} XP + ${growthPercent}%**`,
+        "",
+        ...forecast,
+      ].join("\n")).setFooter({ text: `Estimate uses ${averageAward.toLocaleString()} XP per eligible message` })] });
+      return;
+    }
+    if (operation === "reset-all") {
+      if (!interaction.options.getBoolean("confirm", true)) throw new PublicError("Nothing was reset. Run the command again and choose `confirm: True` when you are ready.");
+      const config = await api.getGuildConfig(interaction.guildId, true);
+      const members = await interaction.guild.members.fetch();
+      const result = await api.resetGuildXp({ guildId: interaction.guildId, moderatorUserId: interaction.user.id });
+      const rankRoleIds = [...new Set(config.levelRoles.map((reward) => reward.roleId))];
+      let membersCleaned = 0;
+      let rolesRemoved = 0;
+      let cleanupFailures = 0;
+      for (const member of members.values()) {
+        if (member.user.bot) continue;
+        const ownedRankRoles = rankRoleIds.filter((roleId) => member.roles.cache.has(roleId));
+        if (!ownedRankRoles.length) continue;
+        try {
+          await member.roles.remove(ownedRankRoles, `${interaction.user.username} reset every Onyx rank`);
+          membersCleaned += 1;
+          rolesRemoved += ownedRankRoles.length;
+        } catch {
+          cleanupFailures += 1;
+        }
+      }
+      const cleanupLine = rankRoleIds.length
+        ? `Removed **${rolesRemoved.toLocaleString()} rank roles** from **${membersCleaned.toLocaleString()} members**.${cleanupFailures ? ` I could not edit ${cleanupFailures.toLocaleString()} members because of Discord role permissions.` : ""}`
+        : "There were no configured rank roles to remove.";
+      await interaction.editReply({ embeds: [new EmbedBuilder().setColor(0xd15b5b).setTitle("Ranks reset to level 0").setDescription(`Cleared XP and rank stats for **${result.resetCount.toLocaleString()} saved profiles**.\n${cleanupLine}`).setFooter({ text: "Members can start earning XP again immediately" })] });
+      return;
+    }
     const user = interaction.options.getUser("member", true);
     if (operation === "get") {
       const current = await api.getLevelProfile(interaction.guildId, user.id);

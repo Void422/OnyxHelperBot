@@ -120,6 +120,7 @@ export const settingsUpdateSchema = z.object({
         curve: z.enum(levelCurves).optional(),
         baseXp: z.number().int().min(1).max(10_000_000).optional(),
         growthXp: z.number().int().min(0).max(10_000_000).optional(),
+        growthPercent: z.number().min(0).max(1_000).optional(),
         cooldownSeconds: z.number().int().min(0).max(86_400).optional(),
         minimumMessageLength: z.number().int().min(0).max(2_000).optional(),
         minAward: z.number().int().min(1).max(100).optional(),

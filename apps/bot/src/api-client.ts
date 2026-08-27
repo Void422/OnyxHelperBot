@@ -190,6 +190,16 @@ export class OnyxApiClient {
     return this.request<{ profile: { xp: number; messageCount: number }; level: number }>("/api/internal/xp/profile", { method: "PATCH", body: JSON.stringify(input) });
   }
 
+  resetGuildXp(input: { guildId: string; moderatorUserId: string }) {
+    return this.request<{ resetCount: number }>("/api/internal/xp/profile", { method: "DELETE", body: JSON.stringify(input) });
+  }
+
+  async configureXpCurve(input: { guildId: string; actorUserId: string; baseXp: number; growthXp: number; growthPercent: number }) {
+    const result = await this.request<{ xp: NonNullable<NonNullable<BotGuildConfig["settings"]>["settings"]["xp"]> }>("/api/internal/xp/config", { method: "PUT", body: JSON.stringify(input) });
+    this.configCache.delete(input.guildId);
+    return result;
+  }
+
   getLeaderboard(guildId: string) {
     return this.request<{ leaderboard: Array<{ userId: string; xp: number; messageCount: number; weeklyXp: number; rank: number; level: number }> }>(`/api/internal/xp/leaderboard?${new URLSearchParams({ guildId })}`);
   }

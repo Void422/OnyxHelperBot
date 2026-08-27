@@ -35,6 +35,15 @@ test("custom curves control the first level and exact per-level growth", () => {
   assert.equal(levelFromXp(xpForLevel(25, curve), curve), 25);
 });
 
+test("custom curves combine flat XP and percentage growth", () => {
+  const curve = { curve: "custom", baseXp: 100, growthXp: 250, growthPercent: 10 } as const;
+  assert.equal(xpForLevel(1, curve), 100);
+  assert.equal(xpForLevel(2, curve) - xpForLevel(1, curve), 360);
+  assert.equal(xpForLevel(3, curve) - xpForLevel(2, curve), 646);
+  assert.equal(levelFromXp(459, curve), 1);
+  assert.equal(levelFromXp(460, curve), 2);
+});
+
 test("preset curves ignore stored custom tuning", () => {
   assert.equal(xpForLevel(10, { curve: "grind", baseXp: 1, growthXp: 0 }), xpForLevel(10, "grind"));
 });

@@ -50,6 +50,10 @@ test("XP adjustments require Administrator at registration and runtime", async (
   const data = command.data.toJSON() as { default_member_permissions?: string | null };
   assert.equal(data.default_member_permissions, PermissionFlagsBits.Administrator.toString());
   assert.deepEqual(command.userPermissions, [PermissionFlagsBits.Administrator]);
+  const options = (data as { options?: CommandOption[] }).options ?? [];
+  assert.deepEqual(options.map((option) => option.name), ["get", "add", "remove", "set", "configure-curve", "reset-all"]);
+  assert.deepEqual(options.find((option) => option.name === "configure-curve")?.options?.map((option) => option.name), ["starting-xp", "flat-increase", "growth-percent"]);
+  assert.deepEqual(options.find((option) => option.name === "reset-all")?.options?.map((option) => option.name), ["confirm"]);
 });
 
 test("message limits require Administrator and expose set, remove, and list", async () => {
