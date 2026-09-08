@@ -88,6 +88,20 @@ export const commandCatalogEntries: CommandCatalogEntry[] = [
     ["xp.add", "Add XP with an auditable reason.", 2],
     ["xp.remove", "Remove XP without going below zero.", 2],
     ["xp.set", "Set an exact XP value with an audit record.", 2],
+    ["xp.configure-curve", "Set flat and percentage growth for regular XP levels.", 2],
+    ["xp.reset-all", "Reset every regular XP profile and earned rank role.", 2],
+  ]),
+  ...entries("Levels", "Everyone", undefined, [
+    ["counting.rank", "View a member's separate counting XP and level.", 2],
+    ["counting.leaderboard", "View the ten highest counting XP profiles.", 2],
+    ["counting.status", "Review the current counting channel and reward pace.", 2],
+  ]),
+  ...entries("Levels", "Administrator", undefined, [
+    ["counting.setup", "Connect a channel to its existing counting bot.", 2],
+    ["counting.rewards", "Set milestone-based XP rewards for accepted counts.", 2],
+    ["counting.curve", "Set the separate counting level curve.", 2],
+    ["counting.disable", "Pause counting XP without deleting progress.", 2],
+    ["counting.reset-all", "Erase only counting XP and accepted-count history.", 2],
   ]),
   ...entries("Tickets", "Manage Channels", "tickets", [
     ["ticket.panel", "Post a configured ticket-opening panel.", 2],

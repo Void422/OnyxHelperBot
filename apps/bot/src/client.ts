@@ -3,6 +3,7 @@ import { OnyxApiClient } from "./api-client";
 import { handleInteraction } from "./events/interaction-create";
 import { handleGuildMemberAdd, handleGuildMemberRemove } from "./events/guild-members";
 import { handleChannelChange, handleMessageDelete, handleMessageUpdate, handleRoleChange, handleVoiceStateChange } from "./events/logging";
+import { handleCountingReaction } from "./events/counting";
 import { handleMessage } from "./events/message-create";
 import { handleStarboardReaction } from "./events/starboard";
 import { logger } from "./logger";
@@ -54,6 +55,7 @@ export function createOnyxClient(api: OnyxApiClient) {
   client.on(Events.GuildCreate, (guild) => void api.registerGuild(guild).catch((error) => logger.error({ event: "guild.registration_failed", guildId: guild.id, error })));
   client.on(Events.InteractionCreate, (interaction) => void handleInteraction(interaction, api));
   client.on(Events.MessageCreate, (message) => void handleMessage(message, api));
+  client.on(Events.MessageReactionAdd, (reaction, user) => void handleCountingReaction(reaction, user, api));
   client.on(Events.MessageReactionAdd, (reaction, user) => void handleStarboardReaction(reaction, user, api));
   client.on(Events.GuildMemberAdd, (member) => void handleGuildMemberAdd(member, api));
   client.on(Events.GuildMemberRemove, (member) => void handleGuildMemberRemove(member, api));

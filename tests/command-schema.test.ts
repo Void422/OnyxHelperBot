@@ -67,3 +67,14 @@ test("message limits require Administrator and expose set, remove, and list", as
   const set = data.options?.find((option) => option.name === "set");
   assert.deepEqual(set?.options?.map((option) => option.name), ["channel", "maximum"]);
 });
+
+test("counting exposes public stats and keeps configuration Administrator-only at runtime", async () => {
+  const { commands } = await import("../apps/bot/src/commands");
+  const command = commands.find((candidate) => candidate.data.name === "counting");
+  assert.ok(command);
+  const data = command.data.toJSON() as { default_member_permissions?: string | null; options?: CommandOption[] };
+  assert.equal(data.default_member_permissions, undefined);
+  assert.deepEqual(data.options?.map((option) => option.name), ["rank", "leaderboard", "status", "setup", "rewards", "curve", "disable", "reset-all"]);
+  assert.deepEqual(data.options?.find((option) => option.name === "setup")?.options?.map((option) => option.name), ["channel", "validator", "accepted-emoji"]);
+  await assert.rejects(command.execute({ interaction: { options: { getSubcommand: () => "disable" }, memberPermissions: { has: () => false } }, api: {} } as never), /Only server administrators/);
+});

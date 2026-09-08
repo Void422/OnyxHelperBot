@@ -88,6 +88,21 @@ export const settingsUpdateSchema = z.object({
         entryButtonLabel: z.string().min(1).max(80).optional(),
       })
       .optional(),
+    counting: z
+      .object({
+        enabled: z.boolean().optional(),
+        channelId: snowflake.optional(),
+        validatorBotId: snowflake.optional(),
+        acceptedEmoji: z.string().min(1).max(100).optional(),
+        baseAward: z.number().int().min(0).max(1_000_000).optional(),
+        bonusEvery: z.number().int().min(1).max(2_000_000_000).optional(),
+        bonusAward: z.number().int().min(0).max(1_000_000).optional(),
+        maximumAward: z.number().int().min(0).max(2_000_000_000).optional(),
+        levelBaseXp: z.number().int().min(1).max(10_000_000).optional(),
+        levelGrowthXp: z.number().int().min(0).max(10_000_000).optional(),
+        levelGrowthPercent: z.number().min(0).max(1_000).optional(),
+      })
+      .optional(),
     messages: z
       .object({
         welcome: messageTemplateSchema.optional(),

@@ -1,6 +1,6 @@
 # Command catalog
 
-Onyx currently registers 52 top-level slash commands containing 83 independently configurable command actions. The dashboard Command Center is generated from the same catalog the bot uses for enable/disable and cooldown overrides, so it does not advertise placeholder commands.
+Onyx currently registers 53 top-level slash commands containing 91 independently configurable command actions. The dashboard Command Center is generated from the same catalog the bot uses for enable/disable and cooldown overrides, so it does not advertise placeholder commands.
 
 ## Moderation
 
@@ -22,9 +22,9 @@ Entries, requirements, remaining time, and winners are stored server-side. Sched
 
 ## Levels
 
-`/rank`, `/leaderboard`, `/levelroles list`, `/levelroles setup`, `/xp get`, `/xp add`, `/xp remove`, `/xp set`, `/xp configure-curve`, `/xp reset-all`
+`/rank`, `/leaderboard`, `/levelroles list`, `/levelroles setup`, `/xp get`, `/xp add`, `/xp remove`, `/xp set`, `/xp configure-curve`, `/xp reset-all`, `/counting rank`, `/counting leaderboard`, `/counting status`, `/counting setup`, `/counting rewards`, `/counting curve`, `/counting disable`, `/counting reset-all`
 
-XP uses anti-spam policy, channel/role exclusions, persistent profiles, level rewards, audited staff adjustments, flat-plus-percentage custom curves, and an Administrator-only server-wide reset.
+Regular XP uses anti-spam policy, channel/role exclusions, persistent profiles, role rewards, audited staff adjustments, custom curves, and an Administrator-only reset. Counting XP is fully separate: an existing counting bot's accepted reaction awards milestone-scaled XP into its own levels and leaderboard, with no counting roles.
 
 ## Tickets
 

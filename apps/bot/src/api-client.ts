@@ -29,6 +29,14 @@ export interface BotGuildConfig {
   channelMessageLimits?: Array<{ id: string; guildId: string; channelId: string; maxMessages: number; enabled: boolean }>;
 }
 
+export interface CountingProfile {
+  xp: number;
+  acceptedCounts: number;
+  highestNumber: number;
+  lastCountAt: string | null;
+  rank: number;
+}
+
 interface CacheEntry {
   expiresAt: number;
   value: BotGuildConfig;
@@ -202,6 +210,33 @@ export class OnyxApiClient {
 
   getLeaderboard(guildId: string) {
     return this.request<{ leaderboard: Array<{ userId: string; xp: number; messageCount: number; weeklyXp: number; rank: number; level: number }> }>(`/api/internal/xp/leaderboard?${new URLSearchParams({ guildId })}`);
+  }
+
+  async configureCounting(input:
+    | { action: "setup"; guildId: string; actorUserId: string; channelId: string; validatorBotId: string; acceptedEmoji: string }
+    | { action: "rewards"; guildId: string; actorUserId: string; baseAward: number; bonusEvery: number; bonusAward: number; maximumAward: number }
+    | { action: "curve"; guildId: string; actorUserId: string; levelBaseXp: number; levelGrowthXp: number; levelGrowthPercent: number }
+    | { action: "disable"; guildId: string; actorUserId: string }
+  ) {
+    const result = await this.request<{ counting: NonNullable<GuildSettingsData["counting"]> }>("/api/internal/counting/config", { method: "PUT", body: JSON.stringify(input) });
+    this.configCache.delete(input.guildId);
+    return result;
+  }
+
+  awardCountingXp(input: { guildId: string; channelId: string; userId: string; messageId: string; countNumber: number; occurredAt: Date }) {
+    return this.request<{ awarded: boolean; xpAward: number; profile: Omit<CountingProfile, "rank">; level: number }>("/api/internal/counting/award", { method: "POST", body: JSON.stringify(input) });
+  }
+
+  getCountingProfile(guildId: string, userId: string) {
+    return this.request<{ profile: CountingProfile; level: number }>(`/api/internal/counting/profile?${new URLSearchParams({ guildId, userId })}`);
+  }
+
+  getCountingLeaderboard(guildId: string) {
+    return this.request<{ leaderboard: Array<CountingProfile & { userId: string; level: number }> }>(`/api/internal/counting/leaderboard?${new URLSearchParams({ guildId })}`);
+  }
+
+  resetCounting(input: { guildId: string; actorUserId: string }) {
+    return this.request<{ resetProfiles: number; resetEntries: number }>("/api/internal/counting/profile", { method: "DELETE", body: JSON.stringify(input) });
   }
 
   configureLevelRoles(input: { guildId: string; actorUserId: string; curve: LevelCurve; rewards: Array<{ level: number; roleId: string; stack: boolean }> }) {

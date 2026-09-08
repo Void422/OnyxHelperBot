@@ -86,6 +86,20 @@ export interface GiveawaySettings {
   entryButtonLabel?: string;
 }
 
+export interface CountingSettings {
+  enabled?: boolean;
+  channelId?: string;
+  validatorBotId?: string;
+  acceptedEmoji?: string;
+  baseAward?: number;
+  bonusEvery?: number;
+  bonusAward?: number;
+  maximumAward?: number;
+  levelBaseXp?: number;
+  levelGrowthXp?: number;
+  levelGrowthPercent?: number;
+}
+
 export interface GuildSettingsData {
   commandPrefix?: string;
   moderationLogChannelId?: string;
@@ -101,6 +115,7 @@ export interface GuildSettingsData {
   suggestions?: SuggestionSettings;
   starboard?: StarboardSettings;
   giveaways?: GiveawaySettings;
+  counting?: CountingSettings;
   messages?: {
     welcome?: MessageTemplate;
     goodbye?: MessageTemplate;
