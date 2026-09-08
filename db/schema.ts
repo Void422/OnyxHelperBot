@@ -338,6 +338,34 @@ export const levelRoles = sqliteTable(
   (table) => [uniqueIndex("level_roles_guild_level_unique").on(table.guildId, table.level)],
 );
 
+export const countingProfiles = sqliteTable(
+  "counting_profiles",
+  {
+    guildId: text("guild_id").notNull().references(() => guilds.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull(),
+    xp: integer("xp").notNull().default(0),
+    acceptedCounts: integer("accepted_counts").notNull().default(0),
+    highestNumber: integer("highest_number").notNull().default(0),
+    lastCountAt: integer("last_count_at", { mode: "timestamp_ms" }),
+    ...timestamps,
+  },
+  (table) => [primaryKey({ columns: [table.guildId, table.userId] }), index("counting_profiles_guild_xp_idx").on(table.guildId, table.xp)],
+);
+
+export const countingEntries = sqliteTable(
+  "counting_entries",
+  {
+    messageId: text("message_id").primaryKey(),
+    guildId: text("guild_id").notNull().references(() => guilds.id, { onDelete: "cascade" }),
+    channelId: text("channel_id").notNull(),
+    userId: text("user_id").notNull(),
+    countNumber: integer("count_number").notNull(),
+    xpAward: integer("xp_award").notNull(),
+    ...timestamps,
+  },
+  (table) => [index("counting_entries_guild_idx").on(table.guildId), index("counting_entries_guild_user_idx").on(table.guildId, table.userId)],
+);
+
 export const tickets = sqliteTable(
   "tickets",
   {
