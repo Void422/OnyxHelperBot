@@ -1,9 +1,12 @@
 import { mkdirSync } from "node:fs";
+import { createRequire } from "node:module";
 import { dirname } from "node:path";
-import { DatabaseSync } from "node:sqlite";
+import type { DatabaseSync as NodeDatabase } from "node:sqlite";
 import { countingAwardForNumber, countingLevelCurve, defaultCountingSettings, resolveCountingSettings } from "@/packages/core/src/counting";
 import type { CountingSettings } from "@/packages/core/src/domain";
 import { levelFromXp } from "@/packages/core/src/leveling";
+
+const { DatabaseSync } = createRequire(import.meta.url)("node:sqlite") as typeof import("node:sqlite");
 
 export interface LocalCountingProfile {
   xp: number;
@@ -27,7 +30,7 @@ interface StoredProfile {
 }
 
 export class CountingStore {
-  private readonly database: DatabaseSync;
+  private readonly database: NodeDatabase;
 
   constructor(filePath: string) {
     mkdirSync(dirname(filePath), { recursive: true });
