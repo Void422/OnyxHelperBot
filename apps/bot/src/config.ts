@@ -13,6 +13,7 @@ const schema = z.object({
   ONYX_API_URL: z.string().url().transform((value) => value.replace(/\/$/, "")),
   ONYX_SERVICE_TOKEN: z.string().min(32),
   ONYX_MESSAGE_LIMITS_PATH: z.string().min(1).optional(),
+  ONYX_COUNTING_PATH: z.string().min(1).optional(),
   DEVELOPMENT_GUILD_ID: z.string().regex(/^\d{17,20}$/).optional(),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
 });

@@ -2,10 +2,12 @@ import type { Guild } from "discord.js";
 import type { GuildSettingsData, GuildModule, GiveawayRequirements } from "@/packages/core/src/domain";
 import type { LevelCurve } from "@/packages/core/src/rank-ladders";
 import { config } from "./config";
+import { CountingStore, type CountingConfigurationInput } from "./counting-store";
 import { PublicError } from "./errors";
 import { MessageLimitStore } from "./message-limit-store";
 
 const localMessageLimits = config.ONYX_MESSAGE_LIMITS_PATH ? new MessageLimitStore(config.ONYX_MESSAGE_LIMITS_PATH) : null;
+const localCounting = config.ONYX_COUNTING_PATH ? new CountingStore(config.ONYX_COUNTING_PATH) : null;
 
 export interface BotGuildConfig {
   settings: {
@@ -77,6 +79,9 @@ export class OnyxApiClient {
       const merged = new Map((value.channelMessageLimits ?? []).map((limit) => [limit.channelId, limit]));
       for (const limit of local) merged.set(limit.channelId, limit);
       value.channelMessageLimits = [...merged.values()];
+    }
+    if (localCounting && value.settings) {
+      value.settings.settings.counting = localCounting.getSettings(guildId);
     }
     this.configCache.set(guildId, { value, expiresAt: Date.now() + 30_000 });
     return value;
@@ -212,30 +217,34 @@ export class OnyxApiClient {
     return this.request<{ leaderboard: Array<{ userId: string; xp: number; messageCount: number; weeklyXp: number; rank: number; level: number }> }>(`/api/internal/xp/leaderboard?${new URLSearchParams({ guildId })}`);
   }
 
-  async configureCounting(input:
-    | { action: "setup"; guildId: string; actorUserId: string; channelId: string; validatorBotId: string; acceptedEmoji: string }
-    | { action: "rewards"; guildId: string; actorUserId: string; baseAward: number; bonusEvery: number; bonusAward: number; maximumAward: number }
-    | { action: "curve"; guildId: string; actorUserId: string; levelBaseXp: number; levelGrowthXp: number; levelGrowthPercent: number }
-    | { action: "disable"; guildId: string; actorUserId: string }
-  ) {
+  async configureCounting(input: CountingConfigurationInput) {
+    if (localCounting) {
+      const result = localCounting.configure(input);
+      this.configCache.delete(input.guildId);
+      return result;
+    }
     const result = await this.request<{ counting: NonNullable<GuildSettingsData["counting"]> }>("/api/internal/counting/config", { method: "PUT", body: JSON.stringify(input) });
     this.configCache.delete(input.guildId);
     return result;
   }
 
   awardCountingXp(input: { guildId: string; channelId: string; userId: string; messageId: string; countNumber: number; occurredAt: Date }) {
+    if (localCounting) return Promise.resolve(localCounting.award(input));
     return this.request<{ awarded: boolean; xpAward: number; profile: Omit<CountingProfile, "rank">; level: number }>("/api/internal/counting/award", { method: "POST", body: JSON.stringify(input) });
   }
 
   getCountingProfile(guildId: string, userId: string) {
+    if (localCounting) return Promise.resolve(localCounting.getProfile(guildId, userId));
     return this.request<{ profile: CountingProfile; level: number }>(`/api/internal/counting/profile?${new URLSearchParams({ guildId, userId })}`);
   }
 
   getCountingLeaderboard(guildId: string) {
+    if (localCounting) return Promise.resolve({ leaderboard: localCounting.leaderboard(guildId) });
     return this.request<{ leaderboard: Array<CountingProfile & { userId: string; level: number }> }>(`/api/internal/counting/leaderboard?${new URLSearchParams({ guildId })}`);
   }
 
   resetCounting(input: { guildId: string; actorUserId: string }) {
+    if (localCounting) return Promise.resolve(localCounting.reset(input.guildId));
     return this.request<{ resetProfiles: number; resetEntries: number }>("/api/internal/counting/profile", { method: "DELETE", body: JSON.stringify(input) });
   }
 
